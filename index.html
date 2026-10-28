@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1b1035">
+<title>拍牌抢夺</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%83%8F%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --bg1:#24104a;--bg2:#0f0826;--p1:#ff5d73;--p2:#3ec5ff;--gold:#ffd23f;--ok:#2ee59d;--bad:#ff4d4d;
+  --card:#fffaf0;--ink:#231a3a;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;background:var(--bg2);color:#fff;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif}
+button{font-family:inherit;border:0;cursor:pointer;touch-action:manipulation}
+.screen{position:fixed;inset:0;display:none}
+.screen.active{display:flex}
+
+/* ---------- 开始界面 ---------- */
+#start{flex-direction:column;align-items:center;overflow-y:auto;padding:max(18px,env(safe-area-inset-top)) 18px max(18px,env(safe-area-inset-bottom));
+  background:radial-gradient(circle at 20% 10%,#5b2aa8 0,transparent 45%),radial-gradient(circle at 90% 80%,#0d5c8a 0,transparent 45%),linear-gradient(160deg,var(--bg1),var(--bg2));touch-action:pan-y}
+.logo{margin-top:6px;text-align:center}
+.logo .cards{font-size:44px;letter-spacing:-8px;filter:drop-shadow(0 4px 8px #0008)}
+.logo h1{font-size:46px;font-weight:900;letter-spacing:4px;background:linear-gradient(180deg,#fff 20%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:none;filter:drop-shadow(0 3px 0 #b8326d)}
+.logo p{opacity:.8;font-size:14px;margin-top:2px}
+.panel{width:100%;max-width:420px;background:#ffffff14;border:1px solid #ffffff22;border-radius:20px;padding:14px 16px;margin-top:14px;backdrop-filter:blur(6px)}
+.panel h2{font-size:16px;color:var(--gold);margin-bottom:8px}
+.howto ol{padding-left:20px;font-size:14px;line-height:1.65}
+.howto b{color:var(--gold)}
+.names{display:flex;gap:10px}
+.names label{flex:1;font-size:13px;opacity:.9}
+.names input{margin-top:4px;width:100%;font-size:18px;padding:10px 12px;border-radius:12px;border:2px solid #ffffff33;background:#0006;color:#fff;outline:none;-webkit-user-select:text;user-select:text}
+.names label:first-child input{border-color:var(--p2)}
+.names label:last-child input{border-color:var(--p1)}
+.seg{display:flex;gap:8px}
+.seg button{flex:1;padding:10px 4px;border-radius:14px;background:#0005;color:#fff;font-size:16px;font-weight:700;border:2px solid #ffffff22;line-height:1.25}
+.seg button small{display:block;font-size:11px;font-weight:400;opacity:.75}
+.seg button.on{background:linear-gradient(180deg,#ffd23f,#ff9f1c);color:var(--ink);border-color:#fff}
+.go{margin:18px 0 10px;width:100%;max-width:420px;padding:18px;font-size:26px;font-weight:900;letter-spacing:6px;border-radius:22px;color:var(--ink);
+  background:linear-gradient(180deg,#fff27a,#ffb703);box-shadow:0 6px 0 #c77700,0 10px 24px #0008}
+.go:active{transform:translateY(4px);box-shadow:0 2px 0 #c77700}
+.mini{font-size:12px;opacity:.6;text-align:center}
+
+/* ---------- 游戏界面 ---------- */
+#game{flex-direction:column}
+.half{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:12px 14px;overflow:hidden;min-height:0}
+.half.top{transform:rotate(180deg)}
+.half.p1{background:radial-gradient(circle at 50% 120%,#ff5d7355,transparent 60%),linear-gradient(180deg,#2b0f2e,#3b1240)}
+.half.p2{background:radial-gradient(circle at 50% 120%,#3ec5ff55,transparent 60%),linear-gradient(180deg,#0c1d3b,#0f2a4e)}
+.hud{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pname{font-size:20px;font-weight:800;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p1 .pname{color:var(--p1)} .p2 .pname{color:var(--p2)}
+.score{display:flex;align-items:center;gap:6px;background:#0006;border-radius:16px;padding:4px 12px 4px 8px;border:2px solid #ffffff22}
+.score .ic{font-size:26px}
+.score .num{font-size:38px;font-weight:900;font-variant-numeric:tabular-nums;min-width:1.2em;text-align:center}
+.score.bump{animation:bump .5s}
+@keyframes bump{30%{transform:scale(1.35)}100%{transform:scale(1)}}
+.rule{width:100%;max-width:440px;background:var(--card);color:var(--ink);border-radius:22px;padding:10px 14px 12px;text-align:center;position:relative;
+  box-shadow:0 6px 0 #0005,0 0 0 4px var(--gold);flex-shrink:1;min-height:0}
+.rule .tag{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--ink);font-size:13px;font-weight:900;padding:2px 12px;border-radius:999px;white-space:nowrap}
+.rule .ricon{font-size:34px;line-height:1.2;margin-top:4px}
+.rule .rtitle{font-size:clamp(22px,6.6vw,30px);font-weight:900;line-height:1.2}
+.rule .rexp{font-size:clamp(13px,3.7vw,16px);opacity:.75;margin-top:4px;line-height:1.35}
+.rule.trap{box-shadow:0 6px 0 #0005,0 0 0 4px var(--bad);background:#fff1f1}
+.rule.trap .tag{background:var(--bad);color:#fff}
+.rule.hidden .rtitle,.rule.hidden .rexp{filter:blur(9px)}
+.rule.newrule{animation:newrule .7s}
+@keyframes newrule{0%{transform:scale(.6) rotate(-6deg);opacity:0}60%{transform:scale(1.08) rotate(2deg);opacity:1}100%{transform:none}}
+.peek{position:absolute;right:8px;bottom:8px;font-size:12px;background:var(--ink);color:#fff;border-radius:10px;padding:6px 8px;display:none}
+.rule.hidden .peek{display:block}
+.count{font-size:15px;font-weight:700;opacity:.9;display:flex;gap:10px;align-items:center}
+.dots{display:inline-flex;gap:5px}
+.dots i{width:11px;height:11px;border-radius:50%;background:#ffffff33;display:inline-block}
+.dots i.on{background:var(--gold)}
+.tapzone{width:100%;max-width:440px;border-radius:20px;border:3px dashed #ffffff55;padding:12px;text-align:center;font-size:20px;font-weight:800;background:#ffffff10}
+.p1 .tapzone{border-color:#ff5d73aa} .p2 .tapzone{border-color:#3ec5ffaa}
+.tapzone small{display:block;font-size:12px;font-weight:400;opacity:.7}
+.half:active .tapzone{background:#ffffff22}
+
+/* 选择面板 */
+.choose{position:absolute;inset:0;background:#0b0620ee;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;z-index:5}
+.choose.show{display:flex}
+.choose h3{font-size:22px}
+.choose .btns{display:flex;gap:12px;width:100%;max-width:440px}
+.choose .btns button{flex:1;padding:22px 6px;border-radius:22px;font-size:26px;font-weight:900;color:#fff;line-height:1.2}
+.choose .btns button small{display:block;font-size:13px;font-weight:500;opacity:.9;margin-top:4px}
+.bok{background:linear-gradient(180deg,#45f0b0,#13a96d);box-shadow:0 6px 0 #0a6e46}
+.bbad{background:linear-gradient(180deg,#ff7a7a,#d62839);box-shadow:0 6px 0 #8a1020}
+.bcancel{background:#ffffff22;color:#fff;font-size:16px;padding:10px 26px;border-radius:14px}
+.waitmsg{position:absolute;inset:0;background:#0008;display:none;align-items:center;justify-content:center;font-size:20px;font-weight:700;z-index:4;text-align:center;padding:20px}
+.waitmsg.show{display:flex}
+
+/* 反馈 */
+.fx{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:6;flex-direction:column}
+.fx .big{font-size:60px;font-weight:900;animation:pop 1.1s forwards;text-shadow:0 4px 0 #0008}
+.fx .sub{font-size:20px;font-weight:800;animation:pop 1.1s forwards}
+.fx.ok{background:radial-gradient(circle,#2ee59d66,transparent 70%)}
+.fx.bad{background:radial-gradient(circle,#ff4d4d66,transparent 70%)}
+.fx.info{background:radial-gradient(circle,#ffd23f55,transparent 70%)}
+@keyframes pop{0%{transform:scale(.3);opacity:0}25%{transform:scale(1.2);opacity:1}70%{transform:scale(1);opacity:1}100%{transform:scale(1) translateY(-30px);opacity:0}}
+.flyer{position:absolute;font-size:40px;pointer-events:none;z-index:7;animation:fly .9s ease-out forwards}
+@keyframes fly{0%{transform:translate(-50%,-50%) scale(.5);opacity:0}30%{opacity:1;transform:translate(-50%,-50%) scale(1.3)}100%{transform:translate(-50%,-160%) scale(1);opacity:0}}
+.shake{animation:shake .45s}
+@keyframes shake{20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.half.top.shake{animation:shakeT .45s}
+@keyframes shakeT{0%{transform:rotate(180deg)}20%{transform:rotate(180deg) translateX(-10px)}40%{transform:rotate(180deg) translateX(10px)}60%{transform:rotate(180deg) translateX(-6px)}100%{transform:rotate(180deg)}}
+
+/* 中间条 */
+.mid{height:58px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 8px;gap:6px;
+  background:linear-gradient(180deg,#120a2a,#1d1140,#120a2a);border-top:2px solid var(--gold);border-bottom:2px solid var(--gold);z-index:3}
+.mid button{height:44px;min-width:48px;border-radius:12px;background:#ffffff18;color:#fff;font-size:20px;padding:0 8px}
+.mid button:active{background:#ffffff40}
+.mid .info{flex:1;text-align:center;line-height:1.1}
+.mid .stage{font-size:15px;font-weight:900;color:var(--gold)}
+.mid .rnd{font-size:12px;opacity:.8}
+.mid .info .flip{display:inline-block}
+
+/* 弹层 */
+.banner{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:20;pointer-events:none}
+.banner.show{display:flex}
+.banner div{background:linear-gradient(180deg,#fff27a,#ffb703);color:var(--ink);font-size:30px;font-weight:900;padding:16px 28px;border-radius:22px;box-shadow:0 10px 30px #000a;animation:pop 1.8s forwards;text-align:center}
+.banner div small{display:block;font-size:15px;font-weight:700}
+.modal{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;z-index:30;padding:20px}
+.modal.show{display:flex}
+.modal .box{background:#24164a;border:2px solid var(--gold);border-radius:22px;padding:20px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:10px;text-align:center;max-height:90vh;overflow-y:auto;touch-action:pan-y}
+.modal .box h3{font-size:22px;color:var(--gold)}
+.modal .box button{padding:14px;border-radius:14px;font-size:18px;font-weight:800;background:#ffffff18;color:#fff}
+.modal .box button.primary{background:linear-gradient(180deg,#fff27a,#ffb703);color:var(--ink)}
+.modal .box button.danger{background:#d62839}
+.rulelist{text-align:left;font-size:13px;line-height:1.5}
+.rulelist h4{color:var(--gold);margin-top:8px}
+.rulelist p{opacity:.85}
+
+/* 结果界面 */
+#result{flex-direction:column}
+#result .half{justify-content:center;gap:10px}
+.res-title{font-size:52px;font-weight:900}
+.res-title.win{color:var(--gold);text-shadow:0 4px 0 #b8326d}
+.res-title.lose{color:#aab}
+.res-title.draw{color:#fff}
+.res-score{font-size:22px;font-weight:700}
+.res-score b{font-size:44px}
+.res-stats{font-size:14px;opacity:.8}
+#result .mid{justify-content:center;gap:10px}
+#result .mid button{font-size:16px;font-weight:800;padding:0 16px}
+#result .mid button.primary{background:linear-gradient(180deg,#fff27a,#ffb703);color:var(--ink)}
+.confetti{position:absolute;top:-20px;font-size:22px;animation:fall linear forwards;pointer-events:none}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+@media (max-height:700px){.rule .ricon{font-size:26px}.score .num{font-size:30px}.tapzone{padding:8px;font-size:17px}.rule .rexp{font-size:12px}}
+</style>
+</head>
+<body>
+
+<!-- ============ 开始界面 ============ -->
+<section id="start" class="screen active">
+  <div class="logo">
+    <div class="cards">🂡🂱🃁🃑</div>
+    <h1>拍牌抢夺</h1>
+    <p>一部手机 · 一副真扑克 · 两个人面对面</p>
+  </div>
+
+  <div class="panel howto">
+    <h2>⏱ 30秒学会</h2>
+    <ol>
+      <li>手机<b>平放</b>在两人中间，各看靠近自己的半边屏幕。</li>
+      <li>两人<b>轮流</b>翻一张真牌，正面朝上叠到中间的牌堆上。</li>
+      <li>屏幕显示当前<b>拍牌条件</b>。条件一满足，两人<b>抢着用手拍牌堆</b>！</li>
+      <li>先拍到的人点<b>自己那半屏</b>，选「拍对了」或「拍错了」。<br>拍对 <b>+1张</b>，拍错 <b>-1张</b>。</li>
+      <li>每拍 3 次换新条件，越往后越难，还有<b>陷阱规则</b>！回合打完，牌多的人赢。</li>
+    </ol>
+  </div>
+
+  <div class="panel">
+    <h2>👥 玩家名字（可不填）</h2>
+    <div class="names">
+      <label>我这边（下方）<input id="n2" maxlength="8" placeholder="蓝方"></label>
+      <label>对面（上方）<input id="n1" maxlength="8" placeholder="红方"></label>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>⏳ 局长</h2>
+    <div class="seg" id="lenSeg">
+      <button data-v="12">短局<small>12次拍 · 约5分钟</small></button>
+      <button data-v="24" class="on">标准局<small>24次拍 · 约10分钟</small></button>
+      <button data-v="36">长局<small>36次拍 · 约15分钟</small></button>
+    </div>
+    <h2 style="margin-top:12px">❌ 拍错惩罚</h2>
+    <div class="seg" id="penSeg">
+      <button data-v="lose" class="on">扣1张<small>自己 -1（最少为0）</small></button>
+      <button data-v="give">送对方1张<small>自己 -1，对方 +1</small></button>
+    </div>
+  </div>
+
+  <button class="go" id="btnStart">开 始 ！</button>
+  <div class="mini">建议：添加到主屏幕 / 横竖屏锁定为竖屏 · 可离线使用</div>
+</section>
+
+<!-- ============ 游戏界面 ============ -->
+<section id="game" class="screen">
+  <div class="half top p1" data-p="0"></div>
+  <div class="mid">
+    <button id="bUndo" title="撤销">↶</button>
+    <button id="bSkip" title="换规则">🔀</button>
+    <div class="info"><div class="stage" id="midStage">第一阶段</div><div class="rnd" id="midRound">第 1 / 24 次拍</div></div>
+    <button id="bMute" title="声音">🔊</button>
+    <button id="bMenu" title="菜单">☰</button>
+  </div>
+  <div class="half bottom p2" data-p="1"></div>
+</section>
+
+<!-- ============ 结果界面 ============ -->
+<section id="result" class="screen">
+  <div class="half top p1" id="res0"></div>
+  <div class="mid">
+    <button class="primary" id="bReplay">🔁 再来一局</button>
+    <button id="bHome">🏠 返回首页</button>
+  </div>
+  <div class="half bottom p2" id="res1"></div>
+</section>
+
+<div class="banner" id="banner"><div></div></div>
+
+<div class="modal" id="menu">
+  <div class="box">
+    <h3>暂停</h3>
+    <button class="primary" id="mResume">继续游戏</button>
+    <button id="mRules">📖 查看全部规则</button>
+    <button class="danger" id="mEnd">🏁 结束本局，看结果</button>
+    <button id="mHome">🏠 放弃并返回首页</button>
+  </div>
+</div>
+<div class="modal" id="rulesModal">
+  <div class="box">
+    <h3>📖 拍牌条件一览</h3>
+    <div class="rulelist" id="ruleList"></div>
+    <button class="primary" id="rClose">知道了</button>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* =========================================================
+ * 拍牌条件（数据驱动，往数组里加一项即可扩展）
+ * stage: 所属阶段 1/2/3
+ * icon/title/exp: 展示内容（exp 为一句话大白话解释）
+ * trap: true 时卡片显示为红色"陷阱"样式
+ * special: 'flash' = 随机二选一 + 闪现（几秒后隐藏）
+ * ========================================================= */
+const CONDITIONS = [
+  // ---- 第一阶段：简单 ----
+  {id:'pair',  stage:1, icon:'👯', title:'出现对子', exp:'最上面两张点数一样就拍（比如 7 和 7）'},
+  {id:'j',     stage:1, icon:'🤴', title:'出现 J', exp:'翻出任何一张 J 就拍'},
+  {id:'a',     stage:1, icon:'🅰️', title:'出现 A', exp:'翻出任何一张 A 就拍'},
+  {id:'heart', stage:1, icon:'♥️', title:'出现红桃', exp:'翻出任何一张红桃 ♥ 就拍'},
+  {id:'seven', stage:1, icon:'7️⃣', title:'出现 7', exp:'翻出任何一张 7 就拍'},
+  // ---- 第二阶段：需要算一算 ----
+  {id:'sum10', stage:2, icon:'➕', title:'相邻两张加起来=10', exp:'最上面两张点数相加等于10就拍（A算1，JQK不算数）如 3+7、A+9、5+5'},
+  {id:'run',   stage:2, icon:'🪜', title:'连续两张是顺子', exp:'最上面两张点数差1就拍（如 5-6、9-8、J-Q），K和A不算连'},
+  {id:'face',  stage:2, icon:'👑', title:'出现人头牌', exp:'翻出 J、Q、K 任意一张就拍'},
+  {id:'sand',  stage:2, icon:'🥪', title:'出现夹心', exp:'隔一张点数相同就拍（如 7-3-7：第1和第3张一样）'},
+  {id:'suit2', stage:2, icon:'🎨', title:'连续两张同花色', exp:'最上面两张花色一样就拍（如 ♠5 和 ♠K）'},
+  // ---- 第三阶段：组合 + 反向陷阱 ----
+  {id:'c_pair_red', stage:3, icon:'👯❤️', title:'红色对子', exp:'同时满足两个条件：两张点数一样，并且两张都是红色（♥/♦）'},
+  {id:'c_face_heart', stage:3, icon:'👑♥️', title:'红桃人头牌', exp:'同时满足：是 J/Q/K，并且是红桃（只有♥J ♥Q ♥K 才拍）'},
+  {id:'c_sum10_black', stage:3, icon:'➕♠️', title:'加起来=10 且 都是黑色', exp:'同时满足：相邻两张和为10，并且两张都是黑色（♠/♣）'},
+  {id:'t_face_nored', stage:3, trap:true, icon:'👑🚫', title:'人头牌拍！红色不许拍', exp:'出现 J/Q/K 就拍；但是红色的人头牌拍了算错！'},
+  {id:'t_pair_nored', stage:3, trap:true, icon:'👯🚫', title:'对子拍！有红色牌不许拍', exp:'出现对子就拍；只要最上面是红色牌（♥/♦），拍了算错！'},
+  {id:'t_a_k', stage:3, trap:true, icon:'🅰️⛔', title:'A 拍！K 是炸弹', exp:'出现 A 就拍；出现 K 时手痒拍了算错！'},
+  {id:'f_flash', stage:3, special:'flash', icon:'🎲', title:'随机二选一·闪现', exp:'屏幕随机抽一个条件，只显示几秒就隐藏——靠记忆！'}
+];
+
+/* ----------- 状态 ----------- */
+const PER_RULE = 3;   // 每拍3次换一次规则
+const S = {
+  names:['红方','蓝方'], total:24, penalty:'lose',
+  scores:[0,0], round:0, inRule:0, ruleNo:0, stage:1,
+  rule:null, shown:null, history:[], muted:false, busy:-1,
+  stats:[{ok:0,bad:0},{ok:0,bad:0}], flashTimer:null, peekTimer:null
+};
+const $ = s=>document.querySelector(s);
+const halves = [...document.querySelectorAll('#game .half')];
+
+/* ----------- 设置持久化 ----------- */
+try{
+  const saved = JSON.parse(localStorage.getItem('paipai')||'{}');
+  if(saved.n1) $('#n1').value=saved.n1;
+  if(saved.n2) $('#n2').value=saved.n2;
+  if(saved.total) setSeg('#lenSeg',String(saved.total));
+  if(saved.penalty) setSeg('#penSeg',saved.penalty);
+  if(saved.muted) S.muted=true;
+}catch(e){}
+function setSeg(sel,v){document.querySelectorAll(sel+' button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));}
+function segVal(sel){return document.querySelector(sel+' button.on').dataset.v;}
+['#lenSeg','#penSeg'].forEach(sel=>{
+  document.querySelectorAll(sel+' button').forEach(b=>b.addEventListener('click',()=>{setSeg(sel,b.dataset.v);beep(660,.05);buzz(10);}));
+});
+
+/* ----------- 声音 & 震动 ----------- */
+let actx=null;
+function ac(){ if(!actx){ try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} } return actx; }
+function beep(freq,dur,type,delay,vol){
+  if(S.muted) return; const c=ac(); if(!c) return;
+  try{
+    if(c.state==='suspended') c.resume();
+    const t=c.currentTime+(delay||0), o=c.createOscillator(), g=c.createGain();
+    o.type=type||'sine'; o.frequency.setValueAtTime(freq,t);
+    g.gain.setValueAtTime(vol||.18,t); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t+dur+.02);
+  }catch(e){}
+}
+const sfx={
+  ok(){beep(523,.12,'triangle');beep(659,.12,'triangle',.1);beep(784,.25,'triangle',.2);},
+  bad(){beep(220,.18,'sawtooth',0,.12);beep(160,.3,'sawtooth',.15,.12);},
+  tap(){beep(880,.05,'square',0,.08);},
+  rule(){[392,523,659,784].forEach((f,i)=>beep(f,.12,'triangle',i*.08));},
+  stage(){[523,659,784,1047,784,1047].forEach((f,i)=>beep(f,.14,'square',i*.1,.1));},
+  win(){[523,659,784,1047,1319].forEach((f,i)=>beep(f,.2,'triangle',i*.12));}
+};
+function buzz(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
+
+/* ----------- 构建半屏 ----------- */
+function buildHalf(el,p){
+  el.innerHTML = `
+    <div class="hud">
+      <div class="pname"></div>
+      <div class="score"><span class="ic">🃏</span><span class="num">0</span></div>
+    </div>
+    <div class="rule"><div class="tag">当前拍牌条件</div><div class="ricon"></div><div class="rtitle"></div><div class="rexp"></div><div class="peek">按住偷看👁</div></div>
+    <div class="count"><span class="cd"></span><span class="dots"></span></div>
+    <div class="tapzone">✋ 我先拍到了！<small>拍完牌堆后点这半边屏幕记录结果</small></div>
+    <div class="choose">
+      <h3>你先拍到的，结果是？</h3>
+      <div class="btns">
+        <button class="bok">✅ 拍对了<small>从牌堆拿1张 +1</small></button>
+        <button class="bbad">❌ 拍错了<small class="badsub">交出1张 -1</small></button>
+      </div>
+      <button class="bcancel">取消（误触）</button>
+    </div>
+    <div class="waitmsg"></div>`;
+  const q=s=>el.querySelector(s);
+  // 点击半屏 → 打开选择
+  el.addEventListener('click',e=>{
+    if(e.target.closest('.choose')||e.target.closest('.peek')) return;
+    openChoose(p);
+  });
+  q('.bok').addEventListener('click',e=>{e.stopPropagation();record(p,true);});
+  q('.bbad').addEventListener('click',e=>{e.stopPropagation();record(p,false);});
+  q('.bcancel').addEventListener('click',e=>{e.stopPropagation();closeChoose();});
+  // 偷看闪现规则
+  const pk=q('.peek');
+  const show=e=>{e.preventDefault();e.stopPropagation();peek(true);};
+  const hide=e=>{e.preventDefault();e.stopPropagation();peek(false);};
+  pk.addEventListener('touchstart',show,{passive:false});pk.addEventListener('touchend',hide);
+  pk.addEventListener('mousedown',show);pk.addEventListener('mouseup',hide);pk.addEventListener('mouseleave',hide);
+  pk.addEventListener('click',e=>e.stopPropagation());
+}
+halves.forEach((h,i)=>buildHalf(h,+h.dataset.p));
+
+/* ----------- 规则选择 ----------- */
+function stageFor(ruleNo){
+  const rules=Math.ceil(S.total/PER_RULE);
+  return Math.min(3,Math.floor(ruleNo*3/rules)+1);
+}
+function pickRule(stage,excludeId){
+  const pool=CONDITIONS.filter(c=>c.stage===stage && c.id!==excludeId);
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function setRule(rule,animate){
+  clearTimeout(S.flashTimer);
+  S.rule=rule; S.hidden=false;
+  if(rule.special==='flash'){
+    // 从1、2阶段随机抽两个，滚动后落在其中一个
+    const pool=CONDITIONS.filter(c=>c.stage<3);
+    const a=pool[Math.floor(Math.random()*pool.length)];
+    let b; do{b=pool[Math.floor(Math.random()*pool.length)];}while(b===a);
+    const chosen=Math.random()<.5?a:b;
+    S.shown=Object.assign({},chosen,{tag:'🎲 二选一·闪现 — 记住它！',flashOf:rule.id});
+    let n=0; const seq=()=>{
+      if(S.rule!==rule) return;
+      if(n<8){ renderRuleCard(Object.assign({},n%2?b:a,{tag:'🎲 抽签中…'}),false); beep(600+n*40,.04,'square',0,.06); n++; S.flashTimer=setTimeout(seq,180); }
+      else{ renderRuleCard(S.shown,true); sfx.rule(); S.flashTimer=setTimeout(()=>{ if(S.rule===rule){S.hidden=true;renderRuleCard(S.shown,false);} },5000); }
+    }; seq();
+  }else{
+    S.shown=rule; renderRuleCard(rule,animate);
+  }
+}
+function renderRuleCard(r,animate){
+  halves.forEach(h=>{
+    const c=h.querySelector('.rule');
+    c.classList.toggle('trap',!!r.trap);
+    c.classList.toggle('hidden',!!S.hidden);
+    c.querySelector('.tag').textContent = S.hidden ? '🙈 规则已隐藏 — 靠记忆！' : (r.tag || (r.trap?'⚠️ 陷阱规则':'当前拍牌条件'));
+    c.querySelector('.ricon').textContent=r.icon;
+    c.querySelector('.rtitle').textContent=r.title;
+    c.querySelector('.rexp').textContent=r.exp;
+    if(animate){c.classList.remove('newrule');void c.offsetWidth;c.classList.add('newrule');}
+  });
+}
+function peek(on){
+  if(!S.hidden && !on) return;
+  if(S.rule && S.rule.special==='flash' && S.shown){
+    halves.forEach(h=>h.querySelector('.rule').classList.toggle('hidden',!on));
+  }
+}
+
+/* ----------- 渲染 ----------- */
+const STAGE_NAMES=['','第一阶段 · 热身','第二阶段 · 动脑','第三阶段 · 陷阱'];
+function render(){
+  halves.forEach(h=>{
+    const p=+h.dataset.p;
+    h.querySelector('.pname').textContent=S.names[p];
+    h.querySelector('.num').textContent=S.scores[p];
+    const left=PER_RULE-S.inRule;
+    const roundsLeft=S.total-S.round;
+    h.querySelector('.cd').textContent = roundsLeft<=left ? `还剩 ${roundsLeft} 次拍就结束` : `还有 ${left} 次拍换规则`;
+    h.querySelector('.dots').innerHTML = Array.from({length:PER_RULE},(_,i)=>`<i class="${i<S.inRule?'on':''}"></i>`).join('');
+    h.querySelector('.badsub').textContent = S.penalty==='give' ? `送给${S.names[1-p]} 1张` : '交出1张 -1';
+  });
+  $('#midStage').textContent=STAGE_NAMES[S.stage];
+  $('#midRound').textContent=`第 ${Math.min(S.round+1,S.total)} / ${S.total} 次拍`;
+  $('#bMute').textContent=S.muted?'🔇':'🔊';
+}
+
+/* ----------- 记录流程 ----------- */
+function openChoose(p){
+  if(S.busy!==-1) return;
+  S.busy=p; sfx.tap(); buzz(15);
+  halves[p].querySelector('.choose').classList.add('show');
+  const w=halves[1-p].querySelector('.waitmsg');
+  w.textContent=`⏳ ${S.names[p]} 正在记录结果…`; w.classList.add('show');
+}
+function closeChoose(){
+  S.busy=-1;
+  halves.forEach(h=>{h.querySelector('.choose').classList.remove('show');h.querySelector('.waitmsg').classList.remove('show');});
+}
+function snapshot(){
+  return JSON.stringify({scores:S.scores,round:S.round,inRule:S.inRule,ruleNo:S.ruleNo,stage:S.stage,ruleId:S.rule&&S.rule.id,shown:S.shown,hidden:S.hidden,stats:S.stats});
+}
+function record(p,ok){
+  if(S.busy!==p) return;
+  S.history.push(snapshot()); if(S.history.length>50) S.history.shift();
+  closeChoose();
+  const o=1-p;
+  if(ok){
+    S.scores[p]++; S.stats[p].ok++;
+    sfx.ok(); buzz([30,40,30]);
+    fx(p,'ok','✅ 拍对了！','+1 张 🃏'); fx(o,'info',`${S.names[p]} 抢到了`,'下次快一点！');
+    flyer(p,'+1'); bump(p);
+  }else{
+    S.stats[p].bad++;
+    if(S.penalty==='give'){ if(S.scores[p]>0) S.scores[p]--; S.scores[o]++; bump(o); flyer(o,'+1'); }
+    else{ if(S.scores[p]>0) S.scores[p]--; }
+    sfx.bad(); buzz([80,50,80]);
+    fx(p,'bad','❌ 拍错了！', S.penalty==='give'?'送对方 1 张':'-1 张');
+    fx(o,'ok', S.penalty==='give'?'🎁 白捡1张！':'😏 对手失误', S.penalty==='give'?'+1 张':'');
+    flyer(p,'-1'); bump(p);
+    halves[p].classList.remove('shake');void halves[p].offsetWidth;halves[p].classList.add('shake');
+  }
+  S.round++; S.inRule++;
+  if(S.round>=S.total){ render(); setTimeout(endGame,1200); return; }
+  if(S.inRule>=PER_RULE){ setTimeout(nextRule,1100); }
+  render();
+}
+function nextRule(skip){
+  S.inRule=0; S.ruleNo++;
+  const ns=stageFor(S.ruleNo), up=ns>S.stage; S.stage=ns;
+  setRule(pickRule(S.stage,S.rule&&S.rule.id),true);
+  render();
+  if(up){ sfx.stage(); buzz([50,40,50,40,120]); showBanner(`🚀 进入${['','第一','第二','第三'][ns]}阶段！`, ns===3?'小心陷阱规则！':'条件变难了'); }
+  else { sfx.rule(); buzz(40); showBanner(skip?'🔀 换个规则':'🔔 新规则！','看清楚再拍'); }
+}
+function undo(){
+  if(S.busy!==-1) return;
+  const s=S.history.pop(); if(!s){ showBanner('没有可撤销的','');return; }
+  const d=JSON.parse(s);
+  Object.assign(S,{scores:d.scores,round:d.round,inRule:d.inRule,ruleNo:d.ruleNo,stage:d.stage,stats:d.stats});
+  const r=CONDITIONS.find(c=>c.id===d.ruleId);
+  clearTimeout(S.flashTimer);
+  S.rule=r; S.shown=d.shown; S.hidden=d.hidden; renderRuleCard(S.shown,true);
+  render(); sfx.tap(); buzz(20); showBanner('↶ 已撤销上一步','');
+}
+
+/* ----------- 视觉反馈 ----------- */
+function fx(p,cls,big,sub){
+  const d=document.createElement('div'); d.className='fx '+cls;
+  d.innerHTML=`<div class="big">${big}</div><div class="sub">${sub||''}</div>`;
+  halves[p].appendChild(d); setTimeout(()=>d.remove(),1200);
+}
+function flyer(p,t){
+  const el=halves[p].querySelector('.score'), r=el.getBoundingClientRect(), hr=halves[p].getBoundingClientRect();
+  const d=document.createElement('div'); d.className='flyer'; d.textContent=t;
+  d.style.color=t[0]==='+'?'#2ee59d':'#ff4d4d'; d.style.fontWeight='900';
+  // 坐标在半屏内（半屏可能旋转，所以用相对未旋转布局的 offset）
+  d.style.left=(el.offsetLeft+el.offsetWidth/2)+'px'; d.style.top=(el.offsetTop+el.offsetHeight+10)+'px';
+  halves[p].appendChild(d); setTimeout(()=>d.remove(),950);
+}
+function bump(p){const s=halves[p].querySelector('.score');s.classList.remove('bump');void s.offsetWidth;s.classList.add('bump');}
+let bannerT;
+function showBanner(t,sub){
+  const b=$('#banner'), d=b.firstElementChild;
+  d.innerHTML=t+(sub?`<small>${sub}</small>`:'');
+  b.classList.remove('show');void b.offsetWidth;b.classList.add('show');
+  d.style.animation='none';void d.offsetWidth;d.style.animation='';
+  clearTimeout(bannerT); bannerT=setTimeout(()=>b.classList.remove('show'),1800);
+}
+
+/* ----------- 开始 / 结束 ----------- */
+function startGame(){
+  S.names=[$('#n1').value.trim()||'红方',$('#n2').value.trim()||'蓝方'];
+  S.total=+segVal('#lenSeg'); S.penalty=segVal('#penSeg');
+  try{localStorage.setItem('paipai',JSON.stringify({n1:$('#n1').value.trim(),n2:$('#n2').value.trim(),total:S.total,penalty:S.penalty,muted:S.muted}));}catch(e){}
+  S.scores=[0,0]; S.round=0; S.inRule=0; S.ruleNo=0; S.stage=1; S.history=[]; S.busy=-1;
+  S.stats=[{ok:0,bad:0},{ok:0,bad:0}];
+  closeChoose();
+  show('game'); ac();
+  setRule(pickRule(1),true); render();
+  sfx.rule(); buzz(40);
+  showBanner('🃏 开始！','翻牌吧～');
+  try{ if(document.documentElement.requestFullscreen && matchMedia('(pointer:coarse)').matches) document.documentElement.requestFullscreen().catch(()=>{}); }catch(e){}
+}
+function endGame(){
+  clearTimeout(S.flashTimer); closeChoose(); $('#menu').classList.remove('show');
+  const [a,b]=S.scores;
+  [0,1].forEach(p=>{
+    const me=S.scores[p], op=S.scores[1-p];
+    const res= me>op?'win':me<op?'lose':'draw';
+    const title= res==='win'?'🏆 你赢了！':res==='lose'?'😭 你输了':'🤝 平局！';
+    $('#res'+p).innerHTML=`
+      <div class="pname" style="color:${p?'var(--p2)':'var(--p1)'}">${esc(S.names[p])}</div>
+      <div class="res-title ${res}">${title}</div>
+      <div class="res-score">我 <b>${me}</b> 张 &nbsp;:&nbsp; <b>${op}</b> 张 ${esc(S.names[1-p])}</div>
+      <div class="res-stats">拍对 ${S.stats[p].ok} 次 · 拍错 ${S.stats[p].bad} 次 · 共 ${S.round} 次拍</div>`;
+  });
+  show('result');
+  if(a!==b){ sfx.win(); buzz([60,40,60,40,200]); confetti(a>b?0:1); } else { sfx.rule(); }
+}
+function confetti(p){
+  const h=$('#res'+p);
+  for(let i=0;i<26;i++){
+    const c=document.createElement('div'); c.className='confetti';
+    c.textContent=['🎉','✨','🃏','♥️','♠️','♦️','♣️','⭐'][i%8];
+    c.style.left=Math.random()*100+'%'; c.style.animationDuration=(1.8+Math.random()*1.8)+'s'; c.style.animationDelay=Math.random()*.8+'s';
+    h.appendChild(c); setTimeout(()=>c.remove(),4000);
+  }
+}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+/* ----------- 规则一览 ----------- */
+function buildRuleList(){
+  let h='';
+  [1,2,3].forEach(st=>{
+    h+=`<h4>${STAGE_NAMES[st]}</h4>`;
+    CONDITIONS.filter(c=>c.stage===st).forEach(c=>{h+=`<p>${c.icon} <b>${c.title}</b>${c.trap?' ⚠️':''}<br>　${c.exp}</p>`;});
+  });
+  h+=`<h4>计分</h4><p>拍对：+1张（从牌堆拿1张）<br>拍错：-1张（不会低于0），或选择“送对方1张”<br>每拍${PER_RULE}次换规则；🔀 可随时跳过当前规则；↶ 可撤销误操作。</p>`;
+  $('#ruleList').innerHTML=h;
+}
+buildRuleList();
+
+/* ----------- 按钮绑定 ----------- */
+$('#btnStart').addEventListener('click',startGame);
+$('#bUndo').addEventListener('click',undo);
+$('#bSkip').addEventListener('click',()=>{ if(S.busy===-1) nextRule(true); });
+$('#bMute').addEventListener('click',()=>{S.muted=!S.muted;render();if(!S.muted)sfx.tap();
+  try{const s=JSON.parse(localStorage.getItem('paipai')||'{}');s.muted=S.muted;localStorage.setItem('paipai',JSON.stringify(s));}catch(e){}});
+$('#bMenu').addEventListener('click',()=>{closeChoose();$('#menu').classList.add('show');});
+$('#mResume').addEventListener('click',()=>$('#menu').classList.remove('show'));
+$('#mEnd').addEventListener('click',endGame);
+$('#mHome').addEventListener('click',()=>{$('#menu').classList.remove('show');clearTimeout(S.flashTimer);show('start');});
+$('#mRules').addEventListener('click',()=>$('#rulesModal').classList.add('show'));
+$('#rClose').addEventListener('click',()=>$('#rulesModal').classList.remove('show'));
+$('#bReplay').addEventListener('click',startGame);
+$('#bHome').addEventListener('click',()=>show('start'));
+
+/* ----------- 防误触缩放/滚动 ----------- */
+['gesturestart','gesturechange','gestureend'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
+document.addEventListener('touchmove',e=>{
+  if(!e.target.closest('#start,.modal .box')) e.preventDefault();
+},{passive:false});
+document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+// 尽量保持屏幕常亮
+async function wake(){ try{ if('wakeLock' in navigator) await navigator.wakeLock.request('screen'); }catch(e){} }
+document.addEventListener('click',wake,{once:true});
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') wake(); });
+
+window.__paipai={S,CONDITIONS,setRule,render}; // 调试用
+})();
+</script>
+</body>
+</html>
