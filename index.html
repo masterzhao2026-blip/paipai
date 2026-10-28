@@ -16,8 +16,8 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;background:var(--bg2);color:#fff;
   font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif}
-button{font-family:inherit;border:0;cursor:pointer;touch-action:manipulation}
-.screen{position:fixed;inset:0;display:none}
+button{font-family:inherit;border:0;cursor:pointer;touch-action:manipulation;color:inherit}
+.screen{position:fixed;inset:0;display:none;height:100dvh}
 .screen.active{display:flex}
 
 /* ---------- 开始界面 ---------- */
@@ -42,66 +42,108 @@ button{font-family:inherit;border:0;cursor:pointer;touch-action:manipulation}
 .seg button small{display:block;font-size:11px;font-weight:400;opacity:.75}
 .seg button.on{background:linear-gradient(180deg,#ffd23f,#ff9f1c);color:var(--ink);border-color:#fff}
 .go{margin:18px 0 10px;width:100%;max-width:420px;padding:18px;font-size:26px;font-weight:900;letter-spacing:6px;border-radius:22px;color:var(--ink);
-  background:linear-gradient(180deg,#fff27a,#ffb703);box-shadow:0 6px 0 #c77700,0 10px 24px #0008}
+  background:linear-gradient(180deg,#fff27a,#ffb703);box-shadow:0 6px 0 #c77700,0 10px 24px #0008;flex-shrink:0}
 .go:active{transform:translateY(4px);box-shadow:0 2px 0 #c77700}
+.resume{width:100%;max-width:420px;margin-top:14px;padding:14px;border-radius:18px;font-size:18px;font-weight:800;background:#2ee59d22;border:2px solid var(--ok);color:#fff;display:none;flex-shrink:0;line-height:1.3}
+.resume small{display:block;font-size:12px;font-weight:500;opacity:.8}
+.resume.show{display:block}
 .mini{font-size:12px;opacity:.6;text-align:center}
+.linkbtn{background:none;color:var(--gold);font-size:14px;text-decoration:underline;padding:6px;margin-bottom:6px}
 
 /* ---------- 游戏界面 ---------- */
-#game{flex-direction:column}
-.half{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:12px 14px;overflow:hidden;min-height:0}
-.half.top{transform:rotate(180deg)}
+#game{flex-direction:column;touch-action:none;--T:150px;--R:42px;--inner:180px;--ov:20px}
+.half{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;padding:0 12px max(8px,env(safe-area-inset-bottom));overflow:hidden;min-height:0}
+.half.top{transform:rotate(180deg);padding-bottom:max(8px,env(safe-area-inset-top))}
 .half.p1{background:radial-gradient(circle at 50% 120%,#ff5d7355,transparent 60%),linear-gradient(180deg,#2b0f2e,#3b1240)}
 .half.p2{background:radial-gradient(circle at 50% 120%,#3ec5ff55,transparent 60%),linear-gradient(180deg,#0c1d3b,#0f2a4e)}
-.hud{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.pname{font-size:20px;font-weight:800;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.p1 .pname{color:var(--p1)} .p2 .pname{color:var(--p2)}
-.score{display:flex;align-items:center;gap:6px;background:#0006;border-radius:16px;padding:4px 12px 4px 8px;border:2px solid #ffffff22}
-.score .ic{font-size:26px}
-.score .num{font-size:38px;font-weight:900;font-variant-numeric:tabular-nums;min-width:1.2em;text-align:center}
-.score.bump{animation:bump .5s}
-@keyframes bump{30%{transform:scale(1.35)}100%{transform:scale(1)}}
-.rule{width:100%;max-width:440px;background:var(--card);color:var(--ink);border-radius:22px;padding:10px 14px 12px;text-align:center;position:relative;
-  box-shadow:0 6px 0 #0005,0 0 0 4px var(--gold);flex-shrink:1;min-height:0}
-.rule .tag{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--ink);font-size:13px;font-weight:900;padding:2px 12px;border-radius:999px;white-space:nowrap}
-.rule .ricon{font-size:34px;line-height:1.2;margin-top:4px}
-.rule .rtitle{font-size:clamp(22px,6.6vw,30px);font-weight:900;line-height:1.2}
-.rule .rexp{font-size:clamp(13px,3.7vw,16px);opacity:.75;margin-top:4px;line-height:1.35}
-.rule.trap{box-shadow:0 6px 0 #0005,0 0 0 4px var(--bad);background:#fff1f1}
-.rule.trap .tag{background:var(--bad);color:#fff}
-.rule.hidden .rtitle,.rule.hidden .rexp{filter:blur(9px)}
-.rule.newrule{animation:newrule .7s}
-@keyframes newrule{0%{transform:scale(.6) rotate(-6deg);opacity:0}60%{transform:scale(1.08) rotate(2deg);opacity:1}100%{transform:none}}
-.peek{position:absolute;right:8px;bottom:8px;font-size:12px;background:var(--ink);color:#fff;border-radius:10px;padding:6px 8px;display:none}
-.rule.hidden .peek{display:block}
-.count{font-size:15px;font-weight:700;opacity:.9;display:flex;gap:10px;align-items:center}
+
+/* 靠中间的区域：左边王按钮，中间留给滑块，右边进度 */
+.inner{height:var(--inner);flex-shrink:0;width:100%;display:flex;justify-content:space-between;align-items:flex-start;padding-top:8px}
+.side{width:calc(50% - var(--R) - 14px);display:flex;flex-direction:column;gap:6px}
+.side.l{align-items:flex-start}
+.side.r{align-items:flex-end;text-align:right}
+.joker{width:76px;height:76px;border-radius:18px;background:linear-gradient(160deg,#fff,#f1e6ff);color:var(--ink);box-shadow:0 5px 0 #6b4bb0,0 0 0 3px #b48cff;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;font-weight:900}
+.joker b{font-size:30px}
+.joker span{font-size:11px;font-weight:700;opacity:.75}
+.joker:active{transform:translateY(4px);box-shadow:0 1px 0 #6b4bb0,0 0 0 3px #b48cff}
+.jtip{font-size:11px;opacity:.6;line-height:1.3;max-width:120px}
+.sinfo .stg{font-size:14px;font-weight:900;color:var(--gold)}
+.sinfo .rnd{font-size:13px;opacity:.85;font-weight:700}
+.count{font-size:12px;opacity:.8;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
 .dots{display:inline-flex;gap:5px}
 .dots i{width:11px;height:11px;border-radius:50%;background:#ffffff33;display:inline-block}
 .dots i.on{background:var(--gold)}
-.tapzone{width:100%;max-width:440px;border-radius:20px;border:3px dashed #ffffff55;padding:12px;text-align:center;font-size:20px;font-weight:800;background:#ffffff10}
-.p1 .tapzone{border-color:#ff5d73aa} .p2 .tapzone{border-color:#3ec5ffaa}
-.tapzone small{display:block;font-size:12px;font-weight:400;opacity:.7}
-.half:active .tapzone{background:#ffffff22}
+.x2{display:none;white-space:nowrap;font-size:12px;font-weight:900;background:linear-gradient(180deg,#d7b8ff,#9a6bff);color:#fff;border-radius:10px;padding:4px 8px;box-shadow:0 0 12px #b48cff;animation:glow 1s infinite alternate}
+.x2.show{display:inline-block}
+@keyframes glow{to{box-shadow:0 0 22px #e2ccff}}
 
-/* 选择面板 */
-.choose{position:absolute;inset:0;background:#0b0620ee;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;z-index:5}
+.hud{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:6px;flex-shrink:0}
+.pname{font-size:20px;font-weight:800;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p1 .pname{color:var(--p1)} .p2 .pname{color:var(--p2)}
+.score{display:flex;align-items:center;gap:6px;background:#0006;border-radius:16px;padding:2px 12px 2px 10px;border:2px solid #ffffff22}
+.score .num{font-size:30px;font-weight:900;font-variant-numeric:tabular-nums;min-width:1.2em;text-align:center}
+.score .unit{font-size:14px;opacity:.7;font-weight:700}
+.score.bump{animation:bump .5s}
+@keyframes bump{30%{transform:scale(1.35)}100%{transform:scale(1)}}
+
+.rule{width:100%;max-width:440px;margin-top:auto;background:var(--card);color:var(--ink);border-radius:20px;padding:14px 12px 10px;text-align:center;position:relative;
+  box-shadow:0 5px 0 #0005,0 0 0 4px var(--gold);flex-shrink:1;min-height:0;transition:box-shadow .2s}
+.rule .tag{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--ink);font-size:13px;font-weight:900;padding:2px 12px;border-radius:999px;white-space:nowrap}
+.rule .rhead{display:flex;align-items:center;justify-content:center;gap:6px}
+.rule .ricon{font-size:28px;line-height:1.2}
+.rule .rtitle{font-size:clamp(20px,6vw,27px);font-weight:900;line-height:1.2}
+.rule .rexp{font-size:clamp(12px,3.5vw,14.5px);opacity:.8;margin-top:3px;line-height:1.35}
+.rule .rtrap{display:none;margin-top:5px;font-size:clamp(12px,3.5vw,14.5px);font-weight:800;color:#c4122b;background:#ffe0e4;border-radius:10px;padding:4px 8px;line-height:1.3}
+.rule .rtrap.show{display:block}
+.rule .rboost{display:none;margin-top:5px;font-size:clamp(13px,3.8vw,16px);font-weight:900;color:#fff;background:linear-gradient(90deg,#ff7a00,#ff2d55);border-radius:10px;padding:4px 8px;line-height:1.3}
+.rule .rboost small{display:none}
+.rule .rboost.show{display:block}
+.rule .rboost.pop{animation:newrule .7s}
+.rule.trap{box-shadow:0 5px 0 #0005,0 0 0 4px var(--bad);background:#fff1f1}
+.rule.trap .tag{background:var(--bad);color:#fff}
+.rule.flash{box-shadow:0 5px 0 #0005,0 0 0 4px #b48cff}
+.rule.flash .tag{background:#9a6bff;color:#fff}
+.rule.hidden .rhead,.rule.hidden .rexp,.rule.hidden .rtrap{filter:blur(9px)}
+.rule.judging{box-shadow:0 5px 0 #0005,0 0 0 4px var(--ok),0 0 26px #2ee59d}
+.rule.judging .tag{background:var(--ok);color:var(--ink)}
+.rule.newrule{animation:newrule .7s}
+.rule.tight{padding:12px 10px 7px}.rule.tight .ricon{font-size:22px}.rule.tight .rtitle{font-size:20px}.rule.tight .rexp{font-size:12px;line-height:1.3}
+.rule.tight .rtrap,.rule.tight .rboost{font-size:12px;padding:3px 6px;margin-top:4px}
+.rule.tighter .rexp{font-size:11px}.rule.tighter .rtitle{font-size:18px}.rule.tighter .ricon{font-size:19px}.rule.tighter .rtrap,.rule.tighter .rboost{font-size:11px}
+@keyframes newrule{0%{transform:scale(.6) rotate(-6deg);opacity:0}60%{transform:scale(1.08) rotate(2deg);opacity:1}100%{transform:none}}
+.peek{position:absolute;right:6px;bottom:6px;font-size:12px;background:var(--ink);color:#fff;border-radius:10px;padding:8px 10px;display:none;touch-action:none;z-index:2}
+.rule.canpeek .peek{display:block}
+
+/* 判定面板（只盖住靠中间的区域，规则卡保持可见） */
+.choose{position:absolute;left:0;right:0;top:0;height:var(--inner);background:#0b0620;display:none;flex-direction:column;align-items:center;justify-content:flex-start;
+  gap:7px;padding:calc(var(--ov) + 6px) 12px 6px;z-index:5;border-bottom:2px solid var(--gold)}
 .choose.show{display:flex}
-.choose h3{font-size:22px}
-.choose .btns{display:flex;gap:12px;width:100%;max-width:440px}
-.choose .btns button{flex:1;padding:22px 6px;border-radius:22px;font-size:26px;font-weight:900;color:#fff;line-height:1.2}
-.choose .btns button small{display:block;font-size:13px;font-weight:500;opacity:.9;margin-top:4px}
-.bok{background:linear-gradient(180deg,#45f0b0,#13a96d);box-shadow:0 6px 0 #0a6e46}
-.bbad{background:linear-gradient(180deg,#ff7a7a,#d62839);box-shadow:0 6px 0 #8a1020}
-.bcancel{background:#ffffff22;color:#fff;font-size:16px;padding:10px 26px;border-radius:14px}
-.waitmsg{position:absolute;inset:0;background:#0008;display:none;align-items:center;justify-content:center;font-size:20px;font-weight:700;z-index:4;text-align:center;padding:20px}
-.waitmsg.show{display:flex}
+.choose h3{font-size:17px}
+.choose .btns{display:flex;gap:10px;width:100%;max-width:440px}
+.choose .btns button{flex:1;padding:12px 6px;border-radius:18px;font-size:23px;font-weight:900;color:#fff;line-height:1.15}
+.choose .btns button small{display:block;font-size:12px;font-weight:600;opacity:.95;margin-top:3px}
+.bok{background:linear-gradient(180deg,#45f0b0,#13a96d);box-shadow:0 5px 0 #0a6e46}
+.bbad{background:linear-gradient(180deg,#ff7a7a,#d62839);box-shadow:0 5px 0 #8a1020}
+.bok:active,.bbad:active{transform:translateY(3px)}
+.bcancel{background:#ffffff22;color:#fff;font-size:14px;padding:7px 20px;border-radius:12px}
+.lockmsg{position:absolute;inset:0;display:none;align-items:flex-start;justify-content:center;z-index:5;
+  background:linear-gradient(180deg,#000e 0,#000e var(--inner),#0002 var(--inner))}
+.lockmsg.show{display:flex}
+.lockmsg div{margin-top:calc(var(--ov) + 30px);font-size:18px;font-weight:800;text-align:center;padding:10px 16px;border-radius:14px;background:#ffffff14;line-height:1.4}
+.lockmsg small{display:block;font-size:13px;opacity:.75;font-weight:600}
 
 /* 反馈 */
-.fx{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:6;flex-direction:column}
-.fx .big{font-size:60px;font-weight:900;animation:pop 1.1s forwards;text-shadow:0 4px 0 #0008}
-.fx .sub{font-size:20px;font-weight:800;animation:pop 1.1s forwards}
+.fx{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:6;flex-direction:column;text-align:center;padding:0 10px}
+.fx .big{font-size:52px;font-weight:900;animation:pop 1.1s forwards;text-shadow:0 4px 0 #0008}
+.fx .sub{font-size:20px;font-weight:800;animation:pop 1.1s forwards;max-width:100%}
+.fx.long .big,.fx.long .sub{animation-duration:2s}
 .fx.ok{background:radial-gradient(circle,#2ee59d66,transparent 70%)}
 .fx.bad{background:radial-gradient(circle,#ff4d4d66,transparent 70%)}
 .fx.info{background:radial-gradient(circle,#ffd23f55,transparent 70%)}
+.fx.jk{background:radial-gradient(circle,#b48cff88,transparent 72%)}
+.fx.jk .big{color:#fff;text-shadow:0 4px 0 #5b2aa8,0 0 20px #b48cff}
+.fx.jk .sub{font-size:24px;background:#000a;border-radius:14px;padding:8px 14px;margin-top:6px}
 @keyframes pop{0%{transform:scale(.3);opacity:0}25%{transform:scale(1.2);opacity:1}70%{transform:scale(1);opacity:1}100%{transform:scale(1) translateY(-30px);opacity:0}}
 .flyer{position:absolute;font-size:40px;pointer-events:none;z-index:7;animation:fly .9s ease-out forwards}
 @keyframes fly{0%{transform:translate(-50%,-50%) scale(.5);opacity:0}30%{opacity:1;transform:translate(-50%,-50%) scale(1.3)}100%{transform:translate(-50%,-160%) scale(1);opacity:0}}
@@ -109,36 +151,79 @@ button{font-family:inherit;border:0;cursor:pointer;touch-action:manipulation}
 @keyframes shake{20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
 .half.top.shake{animation:shakeT .45s}
 @keyframes shakeT{0%{transform:rotate(180deg)}20%{transform:rotate(180deg) translateX(-10px)}40%{transform:rotate(180deg) translateX(10px)}60%{transform:rotate(180deg) translateX(-6px)}100%{transform:rotate(180deg)}}
+/* 每半屏各一份的横幅 */
+.hb{position:absolute;left:0;right:0;top:calc(var(--inner) - 10px);display:none;justify-content:center;z-index:9;pointer-events:none}
+.hb.show{display:flex}
+.hb div{background:linear-gradient(180deg,#fff27a,#ffb703);color:var(--ink);font-size:26px;font-weight:900;padding:12px 22px;border-radius:20px;box-shadow:0 10px 30px #000a;animation:pop 1.9s forwards;text-align:center;max-width:92%}
+.hb div small{display:block;font-size:14px;font-weight:700}
+.hb.boost div{background:linear-gradient(180deg,#ffb000,#ff2d55);color:#fff;font-size:34px}
+.hb.boost div small{font-size:17px}
 
-/* 中间条 */
-.mid{height:58px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 8px;gap:6px;
+/* 中间条（滑块在正中间，按钮靠两边） */
+.mid{height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 8px;gap:6px;position:relative;
   background:linear-gradient(180deg,#120a2a,#1d1140,#120a2a);border-top:2px solid var(--gold);border-bottom:2px solid var(--gold);z-index:3}
-.mid button{height:44px;min-width:48px;border-radius:12px;background:#ffffff18;color:#fff;font-size:20px;padding:0 8px}
+.mid .grp{display:flex;gap:6px}
+.mid button{height:36px;min-width:42px;border-radius:11px;background:#ffffff18;color:#fff;font-size:18px;padding:0 6px}
 .mid button:active{background:#ffffff40}
-.mid .info{flex:1;text-align:center;line-height:1.1}
-.mid .stage{font-size:15px;font-weight:900;color:var(--gold)}
-.mid .rnd{font-size:12px;opacity:.8}
-.mid .info .flip{display:inline-block}
+
+/* ---------- 滑块 ---------- */
+#arena{position:absolute;inset:0;pointer-events:none;z-index:8}
+.lane{position:absolute;left:50%;width:calc(var(--R) * 2 + 12px);margin-left:calc(var(--R) * -1 - 6px);height:calc(var(--T) + var(--R) + 6px);
+  border-radius:calc(var(--R) + 6px);overflow:hidden;transition:opacity .25s}
+.lane.b{top:50%;background:linear-gradient(180deg,#3ec5ff10,#3ec5ff38);border:2px dashed #3ec5ff88;border-top:0;border-radius:0 0 calc(var(--R) + 6px) calc(var(--R) + 6px)}
+.lane.t{bottom:50%;background:linear-gradient(0deg,#ff5d7310,#ff5d7338);border:2px dashed #ff5d7388;border-bottom:0;border-radius:calc(var(--R) + 6px) calc(var(--R) + 6px) 0 0}
+.lane .fill{position:absolute;left:0;right:0;height:0}
+.lane.b .fill{top:0;background:linear-gradient(180deg,#3ec5ff00,#3ec5ffcc)}
+.lane.t .fill{bottom:0;background:linear-gradient(0deg,#ff5d7300,#ff5d73cc)}
+.tline{position:absolute;left:50%;width:calc(var(--R) * 2 + 40px);margin-left:calc(var(--R) * -1 - 20px);height:4px;border-radius:2px;transition:opacity .25s}
+.tline.b{top:calc(50% + var(--T) - 2px);background:var(--p2);box-shadow:0 0 8px var(--p2)}
+.tline.t{top:calc(50% - var(--T) - 2px);background:var(--p1);box-shadow:0 0 8px var(--p1)}
+.tline span{position:absolute;left:50%;top:6px;width:60px;margin-left:-30px;text-align:center;font-size:11px;font-weight:800;white-space:nowrap;line-height:16px;opacity:.9}
+.tline.b span{color:var(--p2)}
+.tline.t span{color:var(--p1);transform:rotate(180deg);top:auto;bottom:6px}
+.hint{position:absolute;left:50%;width:96px;margin-left:-48px;text-align:center;font-size:12px;font-weight:800;line-height:1.35;opacity:.85;transition:opacity .2s}
+.hint.b{top:calc(50% + var(--R) + 10px);color:#bfe9ff}
+.hint.t{bottom:calc(50% + var(--R) + 10px);color:#ffd0d7;transform:rotate(180deg)}
+.hint i{font-style:normal;display:block;font-size:16px;animation:nudge 1.2s infinite}
+@keyframes nudge{50%{transform:translateY(5px)}}
+#arena.dragging .hint,#arena.judging .hint,#arena.judging .lane,#arena.judging .tline{opacity:0}
+#puck{position:absolute;left:50%;top:50%;width:calc(var(--R) * 2);height:calc(var(--R) * 2);border-radius:50%;pointer-events:auto;touch-action:none;
+  transform:translate(-50%,-50%) translateY(0px);will-change:transform;
+  background:radial-gradient(circle at 35% 30%,#fffbe0 0,#ffd23f 45%,#e89b00 100%);border:4px solid #fff;
+  box-shadow:0 6px 18px #000b,0 0 0 5px #ffd23f55,inset 0 -6px 0 #0002;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink);cursor:grab}
+#puck.spring{transition:transform .38s cubic-bezier(.3,1.6,.5,1)}
+#puck.home{transition:transform .5s cubic-bezier(.4,0,.2,1)}
+#puck .pl{font-size:calc(var(--R) * .5);font-weight:900;line-height:1}
+#puck .pl.t{transform:rotate(180deg)}
+#puck .bar{width:60%;height:3px;border-radius:2px;background:#0003;margin:3px 0}
+#puck.held{box-shadow:0 10px 26px #000c,0 0 0 9px #ffffff55;cursor:grabbing}
+#puck.toB{box-shadow:0 10px 26px #000c,0 0 0 9px #3ec5ff99}
+#puck.toT{box-shadow:0 10px 26px #000c,0 0 0 9px #ff5d7399}
+#puck.won{animation:snap .42s}
+#puck.w1{background:radial-gradient(circle at 35% 30%,#e8f8ff 0,#3ec5ff 50%,#0a7fb8 100%)}
+#puck.w0{background:radial-gradient(circle at 35% 30%,#ffe8ec 0,#ff5d73 50%,#b8243b 100%)}
+#puck.locked{opacity:.92;cursor:not-allowed}
+#puck.off{filter:grayscale(.6) brightness(.8)}
+@keyframes snap{0%{scale:1}35%{scale:1.32}70%{scale:.92}100%{scale:1}}
 
 /* 弹层 */
-.banner{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:20;pointer-events:none}
-.banner.show{display:flex}
-.banner div{background:linear-gradient(180deg,#fff27a,#ffb703);color:var(--ink);font-size:30px;font-weight:900;padding:16px 28px;border-radius:22px;box-shadow:0 10px 30px #000a;animation:pop 1.8s forwards;text-align:center}
-.banner div small{display:block;font-size:15px;font-weight:700}
 .modal{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;z-index:30;padding:20px}
 .modal.show{display:flex}
-.modal .box{background:#24164a;border:2px solid var(--gold);border-radius:22px;padding:20px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:10px;text-align:center;max-height:90vh;overflow-y:auto;touch-action:pan-y}
+.modal .box{background:#24164a;border:2px solid var(--gold);border-radius:22px;padding:20px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:10px;text-align:center;max-height:90vh;max-height:90dvh;overflow-y:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch}
 .modal .box h3{font-size:22px;color:var(--gold)}
-.modal .box button{padding:14px;border-radius:14px;font-size:18px;font-weight:800;background:#ffffff18;color:#fff}
+.modal .box button{padding:14px;border-radius:14px;font-size:18px;font-weight:800;background:#ffffff18;color:#fff;flex-shrink:0}
 .modal .box button.primary{background:linear-gradient(180deg,#fff27a,#ffb703);color:var(--ink)}
 .modal .box button.danger{background:#d62839}
-.rulelist{text-align:left;font-size:13px;line-height:1.5}
-.rulelist h4{color:var(--gold);margin-top:8px}
-.rulelist p{opacity:.85}
+.rulelist{text-align:left;font-size:13.5px;line-height:1.55}
+.rulelist h4{color:var(--gold);margin-top:10px;font-size:15px}
+.rulelist p{opacity:.9;margin-top:3px}
+.rulelist b{color:#fff}
+.rulelist .trapt{color:#ff8a8a}
+.rulelist ul{padding-left:18px}
 
 /* 结果界面 */
 #result{flex-direction:column}
-#result .half{justify-content:center;gap:10px}
+#result .half{justify-content:center;gap:10px;padding-top:12px}
 .res-title{font-size:52px;font-weight:900}
 .res-title.win{color:var(--gold);text-shadow:0 4px 0 #b8326d}
 .res-title.lose{color:#aab}
@@ -146,12 +231,16 @@ button{font-family:inherit;border:0;cursor:pointer;touch-action:manipulation}
 .res-score{font-size:22px;font-weight:700}
 .res-score b{font-size:44px}
 .res-stats{font-size:14px;opacity:.8}
-#result .mid{justify-content:center;gap:10px}
-#result .mid button{font-size:16px;font-weight:800;padding:0 16px}
+#result .mid{justify-content:center;gap:10px;height:58px}
+#result .mid button{font-size:16px;font-weight:800;padding:0 16px;height:44px}
 #result .mid button.primary{background:linear-gradient(180deg,#fff27a,#ffb703);color:var(--ink)}
 .confetti{position:absolute;top:-20px;font-size:22px;animation:fall linear forwards;pointer-events:none}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
-@media (max-height:700px){.rule .ricon{font-size:26px}.score .num{font-size:30px}.tapzone{padding:8px;font-size:17px}.rule .rexp{font-size:12px}}
+@media (max-height:740px){
+  .rule .ricon{font-size:22px}.rule .rtitle{font-size:20px}.rule .rexp{font-size:12px}.rule{padding:12px 10px 8px}
+  .score .num{font-size:28px}.pname{font-size:17px}.joker{width:64px;height:64px}.joker b{font-size:24px}.jtip{display:none}
+  .choose .btns button{padding:9px 4px;font-size:20px}.choose h3{font-size:15px}
+}
 </style>
 </head>
 <body>
@@ -161,18 +250,22 @@ button{font-family:inherit;border:0;cursor:pointer;touch-action:manipulation}
   <div class="logo">
     <div class="cards">🂡🂱🃁🃑</div>
     <h1>拍牌抢夺</h1>
-    <p>一部手机 · 一副真扑克 · 两个人面对面</p>
+    <p>一部手机 · 一副真扑克（带大小王） · 两个人面对面</p>
   </div>
+
+  <button class="resume" id="btnResume">▶ 继续上一局<small id="resumeInfo"></small></button>
 
   <div class="panel howto">
     <h2>⏱ 30秒学会</h2>
     <ol>
       <li>手机<b>平放</b>在两人中间，各看靠近自己的半边屏幕。</li>
-      <li>两人<b>轮流</b>翻一张真牌，正面朝上叠到中间的牌堆上。</li>
-      <li>屏幕显示当前<b>拍牌条件</b>。条件一满足，两人<b>抢着用手拍牌堆</b>！</li>
-      <li>先拍到的人点<b>自己那半屏</b>，选「拍对了」或「拍错了」。<br>拍对 <b>+1张</b>，拍错 <b>-1张</b>。</li>
-      <li>每拍 3 次换新条件，越往后越难，还有<b>陷阱规则</b>！回合打完，牌多的人赢。</li>
+      <li>两人<b>轮流</b>翻一张真牌，正面朝上叠到<b>同一个</b>牌堆上。</li>
+      <li>屏幕显示当前<b>抢牌条件</b>。条件一满足，两人抢<b>屏幕正中间的圆形滑块</b>，<b>按住往自己这边拉</b>，拉过「抢到线」就算抢到！</li>
+      <li>抢到的人在自己半屏选「抢对了」或「抢错了」。抢对 <b>+1分</b>，抢错按惩罚规则算。</li>
+      <li>翻到<b>大小王</b>时点「王」按钮触发随机事件。<b>王本身不能抢</b>，抢了算错！</li>
+      <li>每抢 3 次换新条件，分三个阶段越来越难，还有<b>陷阱、闪现、加码</b>！</li>
     </ol>
+    <button class="linkbtn" id="btnRulesStart">📖 查看完整规则</button>
   </div>
 
   <div class="panel">
@@ -186,32 +279,38 @@ button{font-family:inherit;border:0;cursor:pointer;touch-action:manipulation}
   <div class="panel">
     <h2>⏳ 局长</h2>
     <div class="seg" id="lenSeg">
-      <button data-v="12">短局<small>12次拍 · 约5分钟</small></button>
-      <button data-v="24" class="on">标准局<small>24次拍 · 约10分钟</small></button>
-      <button data-v="36">长局<small>36次拍 · 约15分钟</small></button>
+      <button data-v="12">短局<small>12次抢 · 约5分钟</small></button>
+      <button data-v="24" class="on">标准局<small>24次抢 · 约10分钟</small></button>
+      <button data-v="36">长局<small>36次抢 · 约15分钟</small></button>
     </div>
-    <h2 style="margin-top:12px">❌ 拍错惩罚</h2>
+    <h2 style="margin-top:12px">❌ 抢错惩罚</h2>
     <div class="seg" id="penSeg">
-      <button data-v="lose" class="on">扣1张<small>自己 -1（最少为0）</small></button>
-      <button data-v="give">送对方1张<small>自己 -1，对方 +1</small></button>
+      <button data-v="lose" class="on">扣1分<small>自己 -1（最少为0）</small></button>
+      <button data-v="give">送对方1分<small>自己 -1，对方 +1</small></button>
     </div>
   </div>
 
   <button class="go" id="btnStart">开 始 ！</button>
-  <div class="mini">建议：添加到主屏幕 / 横竖屏锁定为竖屏 · 可离线使用</div>
+  <div class="mini">建议：添加到主屏幕 / 锁定竖屏 · 可离线使用 · 刷新不丢进度</div>
 </section>
 
 <!-- ============ 游戏界面 ============ -->
 <section id="game" class="screen">
   <div class="half top p1" data-p="0"></div>
   <div class="mid">
-    <button id="bUndo" title="撤销">↶</button>
-    <button id="bSkip" title="换规则">🔀</button>
-    <div class="info"><div class="stage" id="midStage">第一阶段</div><div class="rnd" id="midRound">第 1 / 24 次拍</div></div>
-    <button id="bMute" title="声音">🔊</button>
-    <button id="bMenu" title="菜单">☰</button>
+    <div class="grp"><button id="bUndo" title="撤销">↶</button><button id="bSkip" title="换规则">🔀</button></div>
+    <div class="grp"><button id="bMute" title="声音">🔊</button><button id="bMenu" title="菜单">☰</button></div>
   </div>
   <div class="half bottom p2" data-p="1"></div>
+  <div id="arena">
+    <div class="lane t"><div class="fill"></div></div>
+    <div class="lane b"><div class="fill"></div></div>
+    <div class="tline t"><span>抢到线</span></div>
+    <div class="tline b"><span>抢到线</span></div>
+    <div class="hint t">抢到就往<br>自己这边拉<i>⬇</i></div>
+    <div class="hint b">抢到就往<br>自己这边拉<i>⬇</i></div>
+    <div id="puck"><span class="pl t">抢</span><span class="bar"></span><span class="pl b">抢</span></div>
+  </div>
 </section>
 
 <!-- ============ 结果界面 ============ -->
@@ -224,8 +323,6 @@ button{font-family:inherit;border:0;cursor:pointer;touch-action:manipulation}
   <div class="half bottom p2" id="res1"></div>
 </section>
 
-<div class="banner" id="banner"><div></div></div>
-
 <div class="modal" id="menu">
   <div class="box">
     <h3>暂停</h3>
@@ -237,56 +334,75 @@ button{font-family:inherit;border:0;cursor:pointer;touch-action:manipulation}
 </div>
 <div class="modal" id="rulesModal">
   <div class="box">
-    <h3>📖 拍牌条件一览</h3>
+    <h3>📖 完整规则</h3>
     <div class="rulelist" id="ruleList"></div>
     <button class="primary" id="rClose">知道了</button>
   </div>
 </div>
-
 <script>
 (function(){
 'use strict';
 
 /* =========================================================
- * 拍牌条件（数据驱动，往数组里加一项即可扩展）
- * stage: 所属阶段 1/2/3
- * icon/title/exp: 展示内容（exp 为一句话大白话解释）
- * trap: true 时卡片显示为红色"陷阱"样式
- * special: 'flash' = 随机二选一 + 闪现（几秒后隐藏）
+ * 玩法模型：两人轮流各翻一张真牌，叠到同一个牌堆上。
+ * 条件只看：最上面一张 / 最近 2~3 张 / 牌堆张数。
+ * 手机不认识牌——条件由玩家自己判断，手机只负责出题、计时、计分。
+ *
+ * 抢牌条件（数据驱动，往数组里加一项即可扩展）
+ * stage: 所属阶段 1/2/3      w: 抽中权重（默认1）
+ * icon/title/exp: 展示内容（exp 写清楚并带例子）
+ * trap: 陷阱规则；trapText 为陷阱说明（红色显示）
+ * special:'flash' 闪现规则（显示5秒后模糊）
+ * boosts: 第三阶段“中途加码”时可追加的条件（见 BOOSTS）
  * ========================================================= */
+const BOOSTS = {
+  black:{t:'并且是黑色', e:'最上面一张还必须是黑色（♠黑桃 / ♣梅花）'},
+  red:  {t:'并且是红色', e:'最上面一张还必须是红色（♥红桃 / ♦方块）'},
+  big8: {t:'并且点数 ≥ 8', e:'最上面一张还必须是 8、9、10、J、Q、K（A 算 1，不行）'},
+  small6:{t:'并且点数 ≤ 6', e:'最上面一张还必须是 A、2、3、4、5、6'},
+  noK:  {t:'并且不是 K', e:'最上面一张是 K 就不算，抢了算错'}
+};
 const CONDITIONS = [
-  // ---- 第一阶段：简单 ----
-  {id:'pair',  stage:1, icon:'👯', title:'出现对子', exp:'最上面两张点数一样就拍（比如 7 和 7）'},
-  {id:'j',     stage:1, icon:'🤴', title:'出现 J', exp:'翻出任何一张 J 就拍'},
-  {id:'a',     stage:1, icon:'🅰️', title:'出现 A', exp:'翻出任何一张 A 就拍'},
-  {id:'heart', stage:1, icon:'♥️', title:'出现红桃', exp:'翻出任何一张红桃 ♥ 就拍'},
-  {id:'seven', stage:1, icon:'7️⃣', title:'出现 7', exp:'翻出任何一张 7 就拍'},
-  // ---- 第二阶段：需要算一算 ----
-  {id:'sum10', stage:2, icon:'➕', title:'相邻两张加起来=10', exp:'最上面两张点数相加等于10就拍（A算1，JQK不算数）如 3+7、A+9、5+5'},
-  {id:'run',   stage:2, icon:'🪜', title:'连续两张是顺子', exp:'最上面两张点数差1就拍（如 5-6、9-8、J-Q），K和A不算连'},
-  {id:'face',  stage:2, icon:'👑', title:'出现人头牌', exp:'翻出 J、Q、K 任意一张就拍'},
-  {id:'sand',  stage:2, icon:'🥪', title:'出现夹心', exp:'隔一张点数相同就拍（如 7-3-7：第1和第3张一样）'},
-  {id:'suit2', stage:2, icon:'🎨', title:'连续两张同花色', exp:'最上面两张花色一样就拍（如 ♠5 和 ♠K）'},
-  // ---- 第三阶段：组合 + 反向陷阱 ----
-  {id:'c_pair_red', stage:3, icon:'👯❤️', title:'红色对子', exp:'同时满足两个条件：两张点数一样，并且两张都是红色（♥/♦）'},
-  {id:'c_face_heart', stage:3, icon:'👑♥️', title:'红桃人头牌', exp:'同时满足：是 J/Q/K，并且是红桃（只有♥J ♥Q ♥K 才拍）'},
-  {id:'c_sum10_black', stage:3, icon:'➕♠️', title:'加起来=10 且 都是黑色', exp:'同时满足：相邻两张和为10，并且两张都是黑色（♠/♣）'},
-  {id:'t_face_nored', stage:3, trap:true, icon:'👑🚫', title:'人头牌拍！红色不许拍', exp:'出现 J/Q/K 就拍；但是红色的人头牌拍了算错！'},
-  {id:'t_pair_nored', stage:3, trap:true, icon:'👯🚫', title:'对子拍！有红色牌不许拍', exp:'出现对子就拍；只要最上面是红色牌（♥/♦），拍了算错！'},
-  {id:'t_a_k', stage:3, trap:true, icon:'🅰️⛔', title:'A 拍！K 是炸弹', exp:'出现 A 就拍；出现 K 时手痒拍了算错！'},
-  {id:'f_flash', stage:3, special:'flash', icon:'🎲', title:'随机二选一·闪现', exp:'屏幕随机抽一个条件，只显示几秒就隐藏——靠记忆！'}
+  // ---- 第一阶段 · 热身：只看最上面一张或两张 ----
+  {id:'pair',  stage:1, icon:'👯', title:'对子', exp:'最上面两张点数一样就抢，花色不用管。例如 ♠7 + ♦7、♣K + ♥K', boosts:['black','red','big8','small6']},
+  {id:'j',     stage:1, icon:'🤴', title:'出现 J', exp:'最上面一张是 J 就抢（任何花色）。例如 ♠J、♥J', boosts:['black','red']},
+  {id:'a',     stage:1, icon:'🅰️', title:'出现 A', exp:'最上面一张是 A 就抢（任何花色）。例如 ♣A、♦A', boosts:['black','red']},
+  {id:'seven', stage:1, icon:'7️⃣', title:'出现 7', exp:'最上面一张是 7 就抢（任何花色）。例如 ♠7、♥7', boosts:['black','red']},
+  {id:'heart', stage:1, icon:'♥️', title:'红桃', exp:'最上面一张是红桃 ♥ 就抢。例如 ♥3、♥K；♦方块不算！', boosts:['big8','small6']},
+  {id:'redpair',stage:1, icon:'❤️👯', title:'红色对子', exp:'最上面两张点数一样、而且都是红色，例如 红桃7 + 方块7', boosts:['big8','small6']},
+  // ---- 第二阶段 · 动脑：要算一算、记一记 ----
+  {id:'sum10', stage:2, icon:'🔟', title:'凑十', exp:'最上面两张加起来正好 = 10 就抢。A 算 1；人头牌（J/Q/K）不参与凑十，有人头牌就不算。例如 3+7、A+9、5+5、4+6', boosts:['black','red','big8']},
+  {id:'jump',  stage:2, icon:'🦘', title:'大跳', exp:'最上面一张比它下面那张大 3 点或更多就抢。A=1、J=11、Q=12、K=13。例如 4→8、9→Q；8→5（变小）和 6→8（只大2）都不算', boosts:['black','red']},
+  {id:'run',   stage:2, icon:'🪜', title:'顺子', exp:'最近三张点数连续就抢，正着倒着都行。例如 5-6-7、7-6-5、10-J-Q；5-7-6 不算，K 和 A 不相连', boosts:['black','red']},
+  {id:'sand',  stage:2, icon:'🥪', title:'夹心', exp:'最近三张里，第1张和第3张点数一样（中间随便）就抢。例如 7-3-7、K-2-K', boosts:['black','red','big8']},
+  {id:'face',  stage:2, icon:'👑', title:'人头牌', exp:'最上面一张是 J、Q 或 K 就抢。例如 ♠J、♥Q、♣K；A 不是人头牌', boosts:['black','red','noK']},
+  {id:'count', stage:2, icon:'🔢', title:'数堆', exp:'牌堆正好翻到第 5、10、15、20…张时就抢！手机不知道牌堆有几张——全靠你们自己边翻边数、凭记忆！（洗牌重来就从 1 重新数）', boosts:['black','red']},
+  // ---- 第三阶段 · 陷阱：组合 / 陷阱 / 闪现 / 加码 ----
+  {id:'c_pair_black', stage:3, icon:'♠️👯', title:'对子 并且是黑色', exp:'最上面两张点数一样，并且两张都是黑色（♠/♣）。例如 ♠9 + ♣9；♠9 + ♥9 不算', boosts:['big8','small6']},
+  {id:'c_face_heart', stage:3, icon:'👑♥️', title:'人头牌 并且是红桃', exp:'最上面一张是 J/Q/K，并且是红桃。只有 ♥J、♥Q、♥K 能抢；♦Q 不算', boosts:['noK']},
+  {id:'c_sum10_red',  stage:3, icon:'🔟❤️', title:'凑十 并且都是红色', exp:'最上面两张加起来 = 10（A算1，人头牌不参与），并且两张都是红色。例如 ♥3 + ♦7；♥3 + ♠7 不算', boosts:['big8','small6']},
+  {id:'c_sand_face',  stage:3, icon:'🥪👑', title:'人头夹心', exp:'最近三张里第1张和第3张是同一种人头牌（中间随便）。例如 J-5-J、K-9-K', boosts:['black','red']},
+  {id:'t_face_nored', stage:3, trap:true, icon:'👑🚫', title:'人头牌能抢', exp:'最上面一张是 J/Q/K 就抢。例如 ♠J、♣K', trapText:'🚫 陷阱：红色人头（♥♦ 的 JQK）抢了算错！', boosts:['noK']},
+  {id:'t_a_kbomb',    stage:3, trap:true, icon:'🅰️💣', title:'A 能抢', exp:'最上面一张是 A 就抢（任何花色）', trapText:'💣 陷阱：K 是炸弹，谁抢谁算错！', boosts:['black','red']},
+  {id:'t_heart_noface',stage:3, trap:true, icon:'♥️🚫', title:'红桃能抢', exp:'最上面一张是红桃就抢。例如 ♥2、♥9、♥A', trapText:'🚫 陷阱：♥J ♥Q ♥K 不能抢，抢了算错！', boosts:['big8','small6']},
+  {id:'f_flash', stage:3, special:'flash', w:2, icon:'⚡', title:'闪现规则', exp:'随机抽一条前两阶段的条件，只显示 5 秒就变模糊——靠记忆！可按住「偷看」；有人抢到时会自动揭晓真实规则'}
 ];
 
-/* ----------- 状态 ----------- */
-const PER_RULE = 3;   // 每拍3次换一次规则
+/* ----------- 常量 & 状态 ----------- */
+const PER_RULE = 3;        // 每记录 3 次抢就换规则
+const FLASH_MS = 5000;     // 闪现规则显示时长
+const THRESH = 0.37;       // 拉过半屏高度的 37% 才算抢到
+const SAVE_KEY = 'paipai_game_v2';
 const S = {
   names:['红方','蓝方'], total:24, penalty:'lose',
   scores:[0,0], round:0, inRule:0, ruleNo:0, stage:1,
-  rule:null, shown:null, history:[], muted:false, busy:-1,
-  stats:[{ok:0,bad:0},{ok:0,bad:0}], flashTimer:null, peekTimer:null
+  rule:null, shown:null, hidden:false, boost:null, boostAt:0, mult:1,
+  history:[], muted:false, busy:-1, judging:false, rolling:false, rollFrame:null, peeking:false, pending:false,
+  stats:[{ok:0,bad:0,joker:0},{ok:0,bad:0,joker:0}], flashTimer:null, tok:0, playing:false
 };
 const $ = s=>document.querySelector(s);
 const halves = [...document.querySelectorAll('#game .half')];
+const game=$('#game'), arena=$('#arena'), puck=$('#puck');
 
 /* ----------- 设置持久化 ----------- */
 try{
@@ -306,12 +422,13 @@ function segVal(sel){return document.querySelector(sel+' button.on').dataset.v;}
 /* ----------- 声音 & 震动 ----------- */
 let actx=null;
 function ac(){ if(!actx){ try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} } return actx; }
-function beep(freq,dur,type,delay,vol){
+function beep(freq,dur,type,delay,vol,slideTo){
   if(S.muted) return; const c=ac(); if(!c) return;
   try{
     if(c.state==='suspended') c.resume();
     const t=c.currentTime+(delay||0), o=c.createOscillator(), g=c.createGain();
     o.type=type||'sine'; o.frequency.setValueAtTime(freq,t);
+    if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo,t+dur);
     g.gain.setValueAtTime(vol||.18,t); g.gain.exponentialRampToValueAtTime(.001,t+dur);
     o.connect(g).connect(c.destination); o.start(t); o.stop(t+dur+.02);
   }catch(e){}
@@ -320,7 +437,13 @@ const sfx={
   ok(){beep(523,.12,'triangle');beep(659,.12,'triangle',.1);beep(784,.25,'triangle',.2);},
   bad(){beep(220,.18,'sawtooth',0,.12);beep(160,.3,'sawtooth',.15,.12);},
   tap(){beep(880,.05,'square',0,.08);},
+  grab(){beep(500,.06,'triangle',0,.12,800);},
+  tick(n){beep(400+n*60,.03,'square',0,.05);},
+  snap(){beep(300,.09,'square',0,.2,1400);beep(1568,.08,'triangle',.07,.2);beep(2093,.18,'triangle',.13,.16);},
+  back(){beep(700,.12,'sine',0,.08,350);},
   rule(){[392,523,659,784].forEach((f,i)=>beep(f,.12,'triangle',i*.08));},
+  boost(){[330,440,554,659,880].forEach((f,i)=>beep(f,.1,'sawtooth',i*.06,.09));},
+  joker(){[784,622,784,932,1175].forEach((f,i)=>beep(f,.12,'square',i*.09,.09));},
   stage(){[523,659,784,1047,784,1047].forEach((f,i)=>beep(f,.14,'square',i*.1,.1));},
   win(){[523,659,784,1047,1319].forEach((f,i)=>beep(f,.2,'triangle',i*.12));}
 };
@@ -329,40 +452,43 @@ function buzz(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
 /* ----------- 构建半屏 ----------- */
 function buildHalf(el,p){
   el.innerHTML = `
+    <div class="inner">
+      <div class="side l">
+        <button class="joker"><b>🃏王</b><span>翻到王时点</span></button>
+        <div class="jtip">王本身不能抢</div>
+        <div class="x2">🃏×2 下次翻倍</div>
+      </div>
+      <div class="side r">
+        <div class="sinfo"><div class="stg"></div><div class="rnd"></div></div>
+        <div class="count"><span class="cd"></span><span class="dots"></span></div>
+      </div>
+    </div>
+    <div class="rule"><div class="tag">当前抢牌条件</div><div class="rhead"><span class="ricon"></span><span class="rtitle"></span></div><div class="rexp"></div><div class="rtrap"></div><div class="rboost"></div><div class="peek">按住偷看👁</div></div>
     <div class="hud">
       <div class="pname"></div>
-      <div class="score"><span class="ic">🃏</span><span class="num">0</span></div>
+      <div class="score"><span class="num">0</span><span class="unit">分</span></div>
     </div>
-    <div class="rule"><div class="tag">当前拍牌条件</div><div class="ricon"></div><div class="rtitle"></div><div class="rexp"></div><div class="peek">按住偷看👁</div></div>
-    <div class="count"><span class="cd"></span><span class="dots"></span></div>
-    <div class="tapzone">✋ 我先拍到了！<small>拍完牌堆后点这半边屏幕记录结果</small></div>
     <div class="choose">
-      <h3>你先拍到的，结果是？</h3>
+      <h3>🎉 你抢到了！对照规则，结果是？</h3>
       <div class="btns">
-        <button class="bok">✅ 拍对了<small>从牌堆拿1张 +1</small></button>
-        <button class="bbad">❌ 拍错了<small class="badsub">交出1张 -1</small></button>
+        <button class="bok">✅ 抢对了<small class="oksub">+1 分</small></button>
+        <button class="bbad">❌ 抢错了<small class="badsub">-1 分</small></button>
       </div>
-      <button class="bcancel">取消（误触）</button>
+      <button class="bcancel">↩ 取消（误触，不算）</button>
     </div>
-    <div class="waitmsg"></div>`;
+    <div class="lockmsg"><div class="lm"></div></div>
+    <div class="hb"><div></div></div>`;
   const q=s=>el.querySelector(s);
-  // 点击半屏 → 打开选择
-  el.addEventListener('click',e=>{
-    if(e.target.closest('.choose')||e.target.closest('.peek')) return;
-    openChoose(p);
-  });
   q('.bok').addEventListener('click',e=>{e.stopPropagation();record(p,true);});
   q('.bbad').addEventListener('click',e=>{e.stopPropagation();record(p,false);});
-  q('.bcancel').addEventListener('click',e=>{e.stopPropagation();closeChoose();});
-  // 偷看闪现规则
+  q('.bcancel').addEventListener('click',e=>{e.stopPropagation();cancelGrab(p);});
+  q('.joker').addEventListener('click',e=>{e.stopPropagation();jokerPress(p);});
+  // 偷看闪现规则（按住）
   const pk=q('.peek');
-  const show=e=>{e.preventDefault();e.stopPropagation();peek(true);};
-  const hide=e=>{e.preventDefault();e.stopPropagation();peek(false);};
-  pk.addEventListener('touchstart',show,{passive:false});pk.addEventListener('touchend',hide);
-  pk.addEventListener('mousedown',show);pk.addEventListener('mouseup',hide);pk.addEventListener('mouseleave',hide);
-  pk.addEventListener('click',e=>e.stopPropagation());
+  pk.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();try{pk.setPointerCapture(e.pointerId);}catch(_){} peek(true);});
+  ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>pk.addEventListener(ev,()=>peek(false)));
 }
-halves.forEach((h,i)=>buildHalf(h,+h.dataset.p));
+halves.forEach(h=>buildHalf(h,+h.dataset.p));
 
 /* ----------- 规则选择 ----------- */
 function stageFor(ruleNo){
@@ -371,44 +497,80 @@ function stageFor(ruleNo){
 }
 function pickRule(stage,excludeId){
   const pool=CONDITIONS.filter(c=>c.stage===stage && c.id!==excludeId);
-  return pool[Math.floor(Math.random()*pool.length)];
+  const tot=pool.reduce((a,c)=>a+(c.w||1),0); let r=Math.random()*tot;
+  for(const c of pool){ r-=(c.w||1); if(r<0) return c; }
+  return pool[pool.length-1];
 }
 function setRule(rule,animate){
   clearTimeout(S.flashTimer);
-  S.rule=rule; S.hidden=false;
+  S.rule=rule; S.hidden=false; S.rolling=false; S.boost=null; S.peeking=false;
+  S.boostAt = rule.stage===3 ? (Math.random()<.5?1:2) : 0;
   if(rule.special==='flash'){
-    // 从1、2阶段随机抽两个，滚动后落在其中一个
     const pool=CONDITIONS.filter(c=>c.stage<3);
     const a=pool[Math.floor(Math.random()*pool.length)];
     let b; do{b=pool[Math.floor(Math.random()*pool.length)];}while(b===a);
     const chosen=Math.random()<.5?a:b;
-    S.shown=Object.assign({},chosen,{tag:'🎲 二选一·闪现 — 记住它！',flashOf:rule.id});
-    let n=0; const seq=()=>{
+    S.shown=Object.assign({},chosen,{tag:'⚡ 闪现规则 — 5秒后隐藏，记住它！',flash:true,flashOf:rule.id});
+    S.rolling=true; let n=0;
+    const seq=()=>{
       if(S.rule!==rule) return;
-      if(n<8){ renderRuleCard(Object.assign({},n%2?b:a,{tag:'🎲 抽签中…'}),false); beep(600+n*40,.04,'square',0,.06); n++; S.flashTimer=setTimeout(seq,180); }
-      else{ renderRuleCard(S.shown,true); sfx.rule(); S.flashTimer=setTimeout(()=>{ if(S.rule===rule){S.hidden=true;renderRuleCard(S.shown,false);} },5000); }
+      if(n<8){ S.rollFrame=n%2?b:a; renderRule(false); beep(600+n*40,.04,'square',0,.06); n++; S.flashTimer=setTimeout(seq,170); }
+      else{ S.rolling=false; renderRule(true); sfx.rule(); armFlash(); }
     }; seq();
   }else{
-    S.shown=rule; renderRuleCard(rule,animate);
+    S.shown=rule; renderRule(animate);
   }
 }
-function renderRuleCard(r,animate){
+function armFlash(){
+  clearTimeout(S.flashTimer);
+  const rule=S.rule;
+  if(!rule||rule.special!=='flash'||S.hidden) return;
+  S.flashTimer=setTimeout(()=>{ if(S.rule===rule){ S.hidden=true; renderRule(false); save(); } },FLASH_MS);
+}
+function renderRule(animate){
+  const rolling = S.rolling && !S.judging;
+  const r = rolling ? S.rollFrame : S.shown;
+  if(!r) return;
+  const blurred = !rolling && S.hidden && !S.judging && !S.peeking;
+  let tag;
+  if(rolling) tag='🎲 闪现规则抽签中…';
+  else if(S.judging) tag = (S.shown.flash? '👀 判定中 · 闪现规则已揭晓' : '👀 判定中 · 对照这条规则');
+  else if(S.hidden) tag = S.peeking ? '👁 偷看中…' : '🙈 规则已隐藏 — 靠记忆！';
+  else tag = r.tag || (r.trap?'⚠️ 陷阱规则':'当前抢牌条件');
+  const bst = S.boost && !rolling ? BOOSTS[S.boost] : null;
   halves.forEach(h=>{
     const c=h.querySelector('.rule');
     c.classList.toggle('trap',!!r.trap);
-    c.classList.toggle('hidden',!!S.hidden);
-    c.querySelector('.tag').textContent = S.hidden ? '🙈 规则已隐藏 — 靠记忆！' : (r.tag || (r.trap?'⚠️ 陷阱规则':'当前拍牌条件'));
+    c.classList.toggle('flash',!!(S.shown&&S.shown.flash) || rolling);
+    c.classList.toggle('hidden',blurred);
+    c.classList.toggle('judging',!!S.judging);
+    c.classList.toggle('canpeek',!rolling && S.hidden && !S.judging);
+    c.querySelector('.tag').textContent = tag;
     c.querySelector('.ricon').textContent=r.icon;
     c.querySelector('.rtitle').textContent=r.title;
     c.querySelector('.rexp').textContent=r.exp;
+    const t=c.querySelector('.rtrap'); t.textContent=r.trapText||''; t.classList.toggle('show',!!r.trapText);
+    const bo=c.querySelector('.rboost'); bo.classList.toggle('show',!!bst);
+    bo.innerHTML = bst ? `🔥 加码：${bst.t}<small>${bst.e}</small>` : '';
     if(animate){c.classList.remove('newrule');void c.offsetWidth;c.classList.add('newrule');}
+  });
+  fitRules();
+}
+/* 规则卡太高时逐级缩小字号，保证不挤到计分栏 */
+function fitRules(){
+  halves.forEach(h=>{
+    const c=h.querySelector('.rule'), inner=h.querySelector('.inner'), hud=h.querySelector('.hud');
+    c.classList.remove('tight','tighter');
+    const cs=getComputedStyle(h);
+    const avail=h.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-inner.offsetHeight-hud.offsetHeight-14;
+    if(c.offsetHeight>avail) c.classList.add('tight');
+    if(c.offsetHeight>avail) c.classList.add('tighter');
   });
 }
 function peek(on){
-  if(!S.hidden && !on) return;
-  if(S.rule && S.rule.special==='flash' && S.shown){
-    halves.forEach(h=>h.querySelector('.rule').classList.toggle('hidden',!on));
-  }
+  if(on && !S.hidden) return;
+  if(S.peeking===on) return;
+  S.peeking=on; renderRule(false);
 }
 
 /* ----------- 渲染 ----------- */
@@ -418,98 +580,273 @@ function render(){
     const p=+h.dataset.p;
     h.querySelector('.pname').textContent=S.names[p];
     h.querySelector('.num').textContent=S.scores[p];
-    const left=PER_RULE-S.inRule;
+    const left=Math.max(0,PER_RULE-S.inRule);
     const roundsLeft=S.total-S.round;
-    h.querySelector('.cd').textContent = roundsLeft<=left ? `还剩 ${roundsLeft} 次拍就结束` : `还有 ${left} 次拍换规则`;
+    h.querySelector('.stg').textContent=STAGE_NAMES[S.stage];
+    h.querySelector('.rnd').textContent=`第 ${Math.min(S.round+1,S.total)} / ${S.total} 次抢`;
+    h.querySelector('.cd').textContent = roundsLeft<=left ? `还剩 ${roundsLeft} 次抢就结束` : `再抢 ${left} 次换规则`;
     h.querySelector('.dots').innerHTML = Array.from({length:PER_RULE},(_,i)=>`<i class="${i<S.inRule?'on':''}"></i>`).join('');
-    h.querySelector('.badsub').textContent = S.penalty==='give' ? `送给${S.names[1-p]} 1张` : '交出1张 -1';
+    h.querySelector('.x2').classList.toggle('show',S.mult>1);
+    const m=S.mult;
+    h.querySelector('.oksub').textContent = `+${m} 分${m>1?'（王翻倍）':''}`;
+    h.querySelector('.badsub').textContent = S.penalty==='give' ? `自己 -${m}，送${S.names[1-p]} ${m} 分` : `-${m} 分${m>1?'（王翻倍）':''}`;
   });
-  $('#midStage').textContent=STAGE_NAMES[S.stage];
-  $('#midRound').textContent=`第 ${Math.min(S.round+1,S.total)} / ${S.total} 次拍`;
   $('#bMute').textContent=S.muted?'🔇':'🔊';
 }
 
-/* ----------- 记录流程 ----------- */
-function openChoose(p){
+/* =========================================================
+ * 滑块：两人共用，正中间。先碰到的手指锁定它，往自己那边拉过线就抢到。
+ * ========================================================= */
+const G={T:150,R:42,owner:null,startY:0,dy:0,lastTick:0};
+function layout(){
+  const H=game.clientHeight||window.innerHeight;
+  const midH=game.querySelector('.mid').offsetHeight||44;
+  G.R = H<700 ? 36 : 42;
+  G.T = Math.round(THRESH*H/2);
+  const ov = Math.max(0,G.R-midH/2);
+  const inner = Math.round(G.T + G.R - midH/2 + 10);
+  game.style.setProperty('--R',G.R+'px');
+  game.style.setProperty('--T',G.T+'px');
+  game.style.setProperty('--ov',ov+'px');
+  game.style.setProperty('--inner',inner+'px');
+}
+window.addEventListener('resize',()=>{layout(); try{fitRules();}catch(e){} if(G.owner===null && S.busy===-1) setDy(0);});
+function modalOpen(){ return !!document.querySelector('.modal.show'); }
+function puckFree(){ return S.playing && game.classList.contains('active') && S.busy===-1 && !S.pending && !modalOpen(); }
+function setDy(dy){
+  G.dy=dy;
+  puck.style.transform=`translate(-50%,-50%) translateY(${dy}px)`;
+  const pr=Math.min(1,Math.abs(dy)/G.T);
+  arena.querySelector('.lane.b .fill').style.height = (dy>0?pr*100:0)+'%';
+  arena.querySelector('.lane.t .fill').style.height = (dy<0?pr*100:0)+'%';
+  puck.classList.toggle('toB',dy>8); puck.classList.toggle('toT',dy<-8);
+}
+function puckRender(){
+  puck.classList.toggle('off',!S.playing || S.pending);
+  arena.classList.toggle('judging',S.busy!==-1);
+}
+puck.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  if(G.owner!==null) return;            // 已被别的手指锁定 → 抢不走
+  if(!puckFree()) return;
+  G.owner=e.pointerId; G.startY=e.clientY-G.dy; G.lastTick=0;
+  try{ puck.setPointerCapture(e.pointerId); }catch(_){}
+  puck.classList.remove('spring','home'); puck.classList.add('held'); arena.classList.add('dragging');
+  sfx.grab(); buzz(8); ac();
+});
+puck.addEventListener('pointermove',e=>{
+  if(e.pointerId!==G.owner) return;
+  e.preventDefault();
+  let dy=e.clientY-G.startY;
+  dy=Math.max(-G.T-4,Math.min(G.T+4,dy));
+  setDy(dy);
+  const step=Math.floor(Math.abs(dy)/G.T*4);
+  if(step>G.lastTick){ sfx.tick(step); G.lastTick=step; } else if(step<G.lastTick) G.lastTick=step;
+  if(dy>=G.T) grabWon(1); else if(dy<=-G.T) grabWon(0);
+});
+function puckRelease(e){
+  if(e && e.pointerId!==G.owner) return;
+  const id=G.owner; G.owner=null;
+  try{ if(id!==null && puck.hasPointerCapture && puck.hasPointerCapture(id)) puck.releasePointerCapture(id); }catch(_){}
+  puck.classList.remove('held'); arena.classList.remove('dragging');
+  if(S.busy===-1){ springBack(); if(Math.abs(G.dy)>20) sfx.back(); }
+}
+['pointerup','pointercancel','lostpointercapture'].forEach(ev=>puck.addEventListener(ev,puckRelease));
+function springBack(){
+  puck.classList.remove('home'); puck.classList.add('spring'); setDy(0);
+}
+function resetPuck(){
+  if(G.owner!==null){ const id=G.owner; G.owner=null; try{puck.releasePointerCapture(id);}catch(_){} }
+  puck.classList.remove('held','won','w0','w1','locked','toB','toT'); arena.classList.remove('dragging');
+  springBack(); puckRender();
+}
+function grabWon(p){
   if(S.busy!==-1) return;
-  S.busy=p; sfx.tap(); buzz(15);
+  const id=G.owner; G.owner=null;
+  try{ puck.releasePointerCapture(id); }catch(_){}
+  puck.classList.remove('held','spring'); arena.classList.remove('dragging');
+  setDy(p===1?G.T+10:-G.T-10);
+  puck.classList.remove('won'); void puck.offsetWidth; puck.classList.add('won','w'+p,'locked');
+  sfx.snap(); buzz([20,30,60]);
+  openChoose(p);
+  setTimeout(()=>{ if(S.busy===p){ puck.classList.add('home'); setDy(0); } },450);
+}
+
+/* ----------- 判定流程 ----------- */
+function openChoose(p){
+  S.busy=p; S.judging=true; S.peeking=false;
   halves[p].querySelector('.choose').classList.add('show');
-  const w=halves[1-p].querySelector('.waitmsg');
-  w.textContent=`⏳ ${S.names[p]} 正在记录结果…`; w.classList.add('show');
+  const w=halves[1-p].querySelector('.lockmsg');
+  w.querySelector('.lm').innerHTML=`🔒 ${esc(S.names[p])} 抢到了！<small>正在判定，你这边先锁住</small>`; w.classList.add('show');
+  renderRule(false); puckRender();
 }
 function closeChoose(){
-  S.busy=-1;
-  halves.forEach(h=>{h.querySelector('.choose').classList.remove('show');h.querySelector('.waitmsg').classList.remove('show');});
+  S.busy=-1; S.judging=false;
+  halves.forEach(h=>{h.querySelector('.choose').classList.remove('show');h.querySelector('.lockmsg').classList.remove('show');});
+  renderRule(false); resetPuck();
+}
+function cancelGrab(p){
+  if(S.busy!==p) return;
+  closeChoose(); sfx.back(); showBanner('↩ 已取消','这次不算');
 }
 function snapshot(){
-  return JSON.stringify({scores:S.scores,round:S.round,inRule:S.inRule,ruleNo:S.ruleNo,stage:S.stage,ruleId:S.rule&&S.rule.id,shown:S.shown,hidden:S.hidden,stats:S.stats});
+  return JSON.stringify({scores:S.scores,round:S.round,inRule:S.inRule,ruleNo:S.ruleNo,stage:S.stage,ruleId:S.rule&&S.rule.id,
+    shown:S.shown,hidden:S.hidden,boost:S.boost,boostAt:S.boostAt,mult:S.mult,stats:S.stats});
 }
+function pushHistory(){ S.history.push(snapshot()); if(S.history.length>50) S.history.shift(); }
 function record(p,ok){
   if(S.busy!==p) return;
-  S.history.push(snapshot()); if(S.history.length>50) S.history.shift();
+  pushHistory();
   closeChoose();
-  const o=1-p;
+  const o=1-p, m=S.mult; S.mult=1;
+  const x2 = m>1 ? ' 🃏×2' : '';
   if(ok){
-    S.scores[p]++; S.stats[p].ok++;
+    S.scores[p]+=m; S.stats[p].ok++;
     sfx.ok(); buzz([30,40,30]);
-    fx(p,'ok','✅ 拍对了！','+1 张 🃏'); fx(o,'info',`${S.names[p]} 抢到了`,'下次快一点！');
-    flyer(p,'+1'); bump(p);
+    fx(p,'ok','✅ 抢对了！',`+${m} 分${x2}`); fx(o,'info',`${S.names[p]} 抢到了`,'下次快一点！');
+    flyer(p,'+'+m); bump(p);
   }else{
     S.stats[p].bad++;
-    if(S.penalty==='give'){ if(S.scores[p]>0) S.scores[p]--; S.scores[o]++; bump(o); flyer(o,'+1'); }
-    else{ if(S.scores[p]>0) S.scores[p]--; }
+    S.scores[p]=Math.max(0,S.scores[p]-m);
+    if(S.penalty==='give'){ S.scores[o]+=m; bump(o); flyer(o,'+'+m); }
     sfx.bad(); buzz([80,50,80]);
-    fx(p,'bad','❌ 拍错了！', S.penalty==='give'?'送对方 1 张':'-1 张');
-    fx(o,'ok', S.penalty==='give'?'🎁 白捡1张！':'😏 对手失误', S.penalty==='give'?'+1 张':'');
-    flyer(p,'-1'); bump(p);
+    fx(p,'bad','❌ 抢错了！', (S.penalty==='give'?`送对方 ${m} 分`:`-${m} 分`)+x2);
+    fx(o,'ok', S.penalty==='give'?`🎁 白捡${m}分！`:'😏 对手失误', S.penalty==='give'?`+${m} 分`:'');
+    flyer(p,'-'+m); bump(p);
     halves[p].classList.remove('shake');void halves[p].offsetWidth;halves[p].classList.add('shake');
   }
   S.round++; S.inRule++;
-  if(S.round>=S.total){ render(); setTimeout(endGame,1200); return; }
-  if(S.inRule>=PER_RULE){ setTimeout(nextRule,1100); }
-  render();
+  render(); save();
+  afterRecord(1100);
+}
+// 记录之后的自动推进：结束 / 换规则 / 中途加码
+function afterRecord(delay){
+  const tk=++S.tok;
+  const later=fn=>{ S.pending=true; puckRender(); setTimeout(()=>{ if(tk!==S.tok) return; S.pending=false; fn(); puckRender(); },delay); };
+  if(S.round>=S.total){ later(endGame); return; }
+  if(S.inRule>=PER_RULE){ later(()=>nextRule(false)); return; }
+  if(S.stage===3 && !S.boost && S.boostAt && S.inRule>=S.boostAt){ later(applyBoost); return; }
+}
+function applyBoost(id){
+  const base=S.shown||S.rule; const list=(base&&base.boosts)||Object.keys(BOOSTS);
+  S.boost = id || list[Math.floor(Math.random()*list.length)];
+  renderRule(false);
+  halves.forEach(h=>{const b=h.querySelector('.rboost');b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop');});
+  sfx.boost(); buzz([40,30,40,30,90]);
+  showBanner('🔥 加码！',BOOSTS[S.boost].t,'boost');
+  save();
 }
 function nextRule(skip){
-  S.inRule=0; S.ruleNo++;
+  S.inRule=0;
+  if(!skip) S.ruleNo++;            // 只有正常打满 3 次才推进阶段；跳过 / 王换规则不推进阶段
   const ns=stageFor(S.ruleNo), up=ns>S.stage; S.stage=ns;
   setRule(pickRule(S.stage,S.rule&&S.rule.id),true);
-  render();
-  if(up){ sfx.stage(); buzz([50,40,50,40,120]); showBanner(`🚀 进入${['','第一','第二','第三'][ns]}阶段！`, ns===3?'小心陷阱规则！':'条件变难了'); }
-  else { sfx.rule(); buzz(40); showBanner(skip?'🔀 换个规则':'🔔 新规则！','看清楚再拍'); }
+  render(); save();
+  if(up){ sfx.stage(); buzz([50,40,50,40,120]); showBanner(`🚀 进入${['','第一','第二','第三'][ns]}阶段！`, ns===3?'小心陷阱、闪现和加码！':'条件变难了'); }
+  else if(skip!=='joker'){ sfx.rule(); buzz(40); showBanner(skip?'🔀 换个规则':'🔔 新规则！','看清楚再抢'); }
+}
+function skipRule(){
+  if(!S.playing || S.busy!==-1 || S.pending || G.owner!==null) return;
+  pushHistory(); S.tok++; nextRule(true);
 }
 function undo(){
-  if(S.busy!==-1) return;
+  if(!S.playing || S.busy!==-1 || G.owner!==null) return;
   const s=S.history.pop(); if(!s){ showBanner('没有可撤销的','');return; }
-  const d=JSON.parse(s);
-  Object.assign(S,{scores:d.scores,round:d.round,inRule:d.inRule,ruleNo:d.ruleNo,stage:d.stage,stats:d.stats});
-  const r=CONDITIONS.find(c=>c.id===d.ruleId);
+  S.tok++; S.pending=false;
+  restore(JSON.parse(s));
+  render(); puckRender(); sfx.tap(); buzz(20); showBanner('↶ 已撤销上一步',''); save();
+}
+function restore(d){
+  Object.assign(S,{scores:d.scores,round:d.round,inRule:d.inRule,ruleNo:d.ruleNo,stage:d.stage,stats:d.stats,
+    boost:d.boost||null,boostAt:d.boostAt||0,mult:d.mult||1});
   clearTimeout(S.flashTimer);
-  S.rule=r; S.shown=d.shown; S.hidden=d.hidden; renderRuleCard(S.shown,true);
-  render(); sfx.tap(); buzz(20); showBanner('↶ 已撤销上一步','');
+  S.rule=CONDITIONS.find(c=>c.id===d.ruleId)||CONDITIONS[0];
+  S.shown=d.shown||S.rule; S.hidden=!!d.hidden; S.rolling=false; S.peeking=false;
+  renderRule(true); armFlash();
+}
+
+/* ----------- 王（大小王事件） ----------- */
+const JOKER_FX={
+  double:{big:'🃏 王来了！',sub:'下一次判定翻倍 ×2',banner:'对或错都 ×2'},
+  newrule:{big:'🃏 王来了！',sub:'立刻换一条新规则',banner:''}
+};
+function jokerPress(p,forced){
+  if(!S.playing || S.busy!==-1 || S.pending || G.owner!==null || modalOpen()) return;
+  pushHistory(); S.tok++;
+  S.stats[p].joker=(S.stats[p].joker||0)+1;
+  const eff = forced || (Math.random()<.5?'double':'newrule');
+  sfx.joker(); buzz([30,30,30,30,120]);
+  clearTimeout(bannerT); halves.forEach(h=>h.querySelector('.hb').classList.remove('show'));
+  if(eff==='double'){
+    const was=S.mult>1; S.mult=2;
+    [0,1].forEach(i=>fx(i,'jk long',JOKER_FX.double.big, was?'还是翻倍 ×2（不叠加）':JOKER_FX.double.sub));
+  }else{
+    nextRule('joker');
+    [0,1].forEach(i=>fx(i,'jk long',JOKER_FX.newrule.big,JOKER_FX.newrule.sub));
+  }
+  S.lastJoker=eff;
+  render(); save();
+  return eff;
 }
 
 /* ----------- 视觉反馈 ----------- */
 function fx(p,cls,big,sub){
   const d=document.createElement('div'); d.className='fx '+cls;
-  d.innerHTML=`<div class="big">${big}</div><div class="sub">${sub||''}</div>`;
-  halves[p].appendChild(d); setTimeout(()=>d.remove(),1200);
+  d.innerHTML=`<div class="big">${esc(big)}</div><div class="sub">${esc(sub||'')}</div>`;
+  if(!sub) d.querySelector('.sub').style.display='none';
+  halves[p].appendChild(d); setTimeout(()=>d.remove(),/long/.test(cls)?2100:1200);
 }
 function flyer(p,t){
-  const el=halves[p].querySelector('.score'), r=el.getBoundingClientRect(), hr=halves[p].getBoundingClientRect();
+  const el=halves[p].querySelector('.score');
   const d=document.createElement('div'); d.className='flyer'; d.textContent=t;
   d.style.color=t[0]==='+'?'#2ee59d':'#ff4d4d'; d.style.fontWeight='900';
-  // 坐标在半屏内（半屏可能旋转，所以用相对未旋转布局的 offset）
-  d.style.left=(el.offsetLeft+el.offsetWidth/2)+'px'; d.style.top=(el.offsetTop+el.offsetHeight+10)+'px';
+  d.style.left=(el.offsetLeft+el.offsetWidth/2)+'px'; d.style.top=(el.offsetTop-10)+'px';
   halves[p].appendChild(d); setTimeout(()=>d.remove(),950);
 }
 function bump(p){const s=halves[p].querySelector('.score');s.classList.remove('bump');void s.offsetWidth;s.classList.add('bump');}
 let bannerT;
-function showBanner(t,sub){
-  const b=$('#banner'), d=b.firstElementChild;
-  d.innerHTML=t+(sub?`<small>${sub}</small>`:'');
-  b.classList.remove('show');void b.offsetWidth;b.classList.add('show');
-  d.style.animation='none';void d.offsetWidth;d.style.animation='';
-  clearTimeout(bannerT); bannerT=setTimeout(()=>b.classList.remove('show'),1800);
+function showBanner(t,sub,kind){
+  clearTimeout(bannerT);
+  halves.forEach(h=>{
+    const b=h.querySelector('.hb'), d=b.firstElementChild;
+    b.className='hb'+(kind?' '+kind:'');
+    d.innerHTML=esc(t)+(sub?`<small>${esc(sub)}</small>`:'');
+    void b.offsetWidth; b.classList.add('show');
+    d.style.animation='none';void d.offsetWidth;d.style.animation='';
+  });
+  bannerT=setTimeout(()=>halves.forEach(h=>h.querySelector('.hb').classList.remove('show')),1900);
+}
+
+/* ----------- 存档（刷新不丢进度） ----------- */
+function save(){
+  if(!S.playing) return;
+  try{
+    const d=JSON.parse(snapshot());
+    Object.assign(d,{names:S.names,total:S.total,penalty:S.penalty,history:S.history,t:Date.now()});
+    localStorage.setItem(SAVE_KEY,JSON.stringify(d));
+  }catch(e){}
+}
+function clearSave(){ try{localStorage.removeItem(SAVE_KEY);}catch(e){} refreshResume(); }
+function loadSave(){
+  try{ const d=JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); if(d && d.ruleId && Array.isArray(d.scores) && d.round<d.total+1) return d; }catch(e){}
+  return null;
+}
+function refreshResume(){
+  const d=loadSave(), b=$('#btnResume');
+  if(d){ b.classList.add('show'); $('#resumeInfo').textContent=`${d.names[1]} ${d.scores[1]} : ${d.scores[0]} ${d.names[0]} · 第 ${Math.min(d.round+1,d.total)}/${d.total} 次抢`; }
+  else b.classList.remove('show');
+}
+function resumeGame(){
+  const d=loadSave(); if(!d){ refreshResume(); return; }
+  S.names=d.names; S.total=d.total; S.penalty=d.penalty; S.history=Array.isArray(d.history)?d.history:[];
+  S.busy=-1; S.judging=false; S.pending=false; S.tok++; S.playing=true;
+  halves.forEach(h=>{h.querySelector('.choose').classList.remove('show');h.querySelector('.lockmsg').classList.remove('show');});
+  show('game'); layout(); ac();
+  restore(d); render(); resetPuck();
+  showBanner('▶ 继续上一局','接着翻牌吧～'); sfx.rule();
+  if(S.round>=S.total) setTimeout(endGame,600);
+  else if(S.inRule>=PER_RULE) afterRecord(600);
+  else if(S.stage===3 && !S.boost && S.boostAt && S.inRule>=S.boostAt) afterRecord(600);
 }
 
 /* ----------- 开始 / 结束 ----------- */
@@ -517,17 +854,23 @@ function startGame(){
   S.names=[$('#n1').value.trim()||'红方',$('#n2').value.trim()||'蓝方'];
   S.total=+segVal('#lenSeg'); S.penalty=segVal('#penSeg');
   try{localStorage.setItem('paipai',JSON.stringify({n1:$('#n1').value.trim(),n2:$('#n2').value.trim(),total:S.total,penalty:S.penalty,muted:S.muted}));}catch(e){}
-  S.scores=[0,0]; S.round=0; S.inRule=0; S.ruleNo=0; S.stage=1; S.history=[]; S.busy=-1;
-  S.stats=[{ok:0,bad:0},{ok:0,bad:0}];
-  closeChoose();
-  show('game'); ac();
-  setRule(pickRule(1),true); render();
+  S.scores=[0,0]; S.round=0; S.inRule=0; S.ruleNo=0; S.stage=1; S.history=[]; S.busy=-1; S.judging=false; S.mult=1; S.pending=false; S.tok++;
+  S.stats=[{ok:0,bad:0,joker:0},{ok:0,bad:0,joker:0}];
+  S.playing=true;
+  halves.forEach(h=>{h.querySelector('.choose').classList.remove('show');h.querySelector('.lockmsg').classList.remove('show');});
+  show('game'); layout(); ac();
+  setRule(pickRule(1),true); render(); resetPuck();
   sfx.rule(); buzz(40);
-  showBanner('🃏 开始！','翻牌吧～');
+  showBanner('🃏 开始！','轮流翻牌吧～');
+  save();
   try{ if(document.documentElement.requestFullscreen && matchMedia('(pointer:coarse)').matches) document.documentElement.requestFullscreen().catch(()=>{}); }catch(e){}
 }
 function endGame(){
-  clearTimeout(S.flashTimer); closeChoose(); $('#menu').classList.remove('show');
+  clearTimeout(S.flashTimer); S.tok++; S.pending=false;
+  if(S.busy!==-1) closeChoose();
+  S.playing=false; resetPuck();
+  $('#menu').classList.remove('show');
+  clearSave();
   const [a,b]=S.scores;
   [0,1].forEach(p=>{
     const me=S.scores[p], op=S.scores[1-p];
@@ -536,8 +879,8 @@ function endGame(){
     $('#res'+p).innerHTML=`
       <div class="pname" style="color:${p?'var(--p2)':'var(--p1)'}">${esc(S.names[p])}</div>
       <div class="res-title ${res}">${title}</div>
-      <div class="res-score">我 <b>${me}</b> 张 &nbsp;:&nbsp; <b>${op}</b> 张 ${esc(S.names[1-p])}</div>
-      <div class="res-stats">拍对 ${S.stats[p].ok} 次 · 拍错 ${S.stats[p].bad} 次 · 共 ${S.round} 次拍</div>`;
+      <div class="res-score">我 <b>${me}</b> 分 &nbsp;:&nbsp; <b>${op}</b> 分 ${esc(S.names[1-p])}</div>
+      <div class="res-stats">抢对 ${S.stats[p].ok} 次 · 抢错 ${S.stats[p].bad} 次 · 共 ${S.round} 次抢</div>`;
   });
   show('result');
   if(a!==b){ sfx.win(); buzz([60,40,60,40,200]); confetti(a>b?0:1); } else { sfx.rule(); }
@@ -556,30 +899,57 @@ function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;',
 
 /* ----------- 规则一览 ----------- */
 function buildRuleList(){
-  let h='';
+  let h=`
+  <h4>🃏 怎么玩</h4>
+  <p>手机平放在两人中间。两人<b>轮流各翻一张</b>真扑克牌，正面朝上叠到<b>同一个牌堆</b>上（牌堆一直叠着不用收，牌翻完了洗一洗接着翻）。条件只看：<b>最上面一张</b>、<b>最近 2~3 张</b>，或<b>牌堆的张数</b>。手机不认识牌，对不对由你们自己判断。</p>
+  <h4>✋ 怎么抢</h4>
+  <p>屏幕<b>正中间</b>有一个圆形滑块。条件一满足，就<b>按住滑块往自己这边拉</b>，拉过自己这边的「抢到线」就算抢到（轻点不算，要真拉）。</p>
+  <ul><li>谁的手指<b>先碰到</b>滑块，滑块就归谁，对方的手指抢不走。</li>
+  <li>没拉过线就松手，滑块会弹回中间，谁都可以重新抢。</li></ul>
+  <h4>⚖️ 判定和计分</h4>
+  <p>抢到的人在自己半屏选「✅抢对了」或「❌抢错了」，对方那半屏暂时锁住。抢对 <b>+1 分</b>；抢错按开局选的惩罚：<b>扣1分</b>（最少为0），或<b>送对方1分</b>（自己 -1，对方 +1）。误触了点「取消」，这次不算。判定时<b>隐藏的规则会自动揭晓</b>，两边都能看到真实规则。</p>
+  <h4>🃏 大小王</h4>
+  <p>翻到大小王时，任何一方点自己半屏的「王」按钮，随机触发一个事件（两边都会显示）：</p>
+  <ul><li><b>下一次判定翻倍</b>：下一次抢到后，不管对错，得分或扣分都 ×2（不叠加）。</li>
+  <li><b>立刻换一条新规则</b>。</li></ul>
+  <p class="trapt"><b>⚠️ 王本身不能抢，抢了算错！</b>王不算点数也不算花色（数堆时要数进去）。</p>
+  <h4>📈 阶段</h4>
+  <p>每记录 ${PER_RULE} 次抢换一条新条件，按进度自动进入三个阶段：热身 → 动脑 → 陷阱。</p>
+  <ul><li><b class="trapt">陷阱规则</b>：红框卡片，写着什么情况<b>不能抢</b>，手痒抢了算错。</li>
+  <li><b>闪现规则</b>：只显示 5 秒就变模糊，可按住「偷看」，抢到判定时自动揭晓。</li>
+  <li><b>🔥 中途加码</b>：第三阶段的规则抢过 1~2 次后，会弹出「加码！」，在当前规则后面多加一个条件（例如「并且是黑色」），两个都满足才能抢。</li></ul>
+  <h4>🔘 按钮</h4>
+  <p>↶ 撤销（最多 50 步，王的效果也能撤销）· 🔀 跳过当前规则 · 🔊 静音 · ☰ 菜单。刷新页面不会丢进度，首页可「继续上一局」。</p>
+  <h4>🔢 点数</h4>
+  <p>A=1，2~10 按牌面，J=11，Q=12，K=13（凑十时人头牌不参与）。</p>`;
   [1,2,3].forEach(st=>{
     h+=`<h4>${STAGE_NAMES[st]}</h4>`;
-    CONDITIONS.filter(c=>c.stage===st).forEach(c=>{h+=`<p>${c.icon} <b>${c.title}</b>${c.trap?' ⚠️':''}<br>　${c.exp}</p>`;});
+    CONDITIONS.filter(c=>c.stage===st).forEach(c=>{
+      h+=`<p>${c.icon} <b>${esc(c.title)}</b>${c.trap?' <span class="trapt">⚠️陷阱</span>':''}<br>　${esc(c.exp)}${c.trapText?`<br>　<span class="trapt">${esc(c.trapText)}</span>`:''}</p>`;
+    });
   });
-  h+=`<h4>计分</h4><p>拍对：+1张（从牌堆拿1张）<br>拍错：-1张（不会低于0），或选择“送对方1张”<br>每拍${PER_RULE}次换规则；🔀 可随时跳过当前规则；↶ 可撤销误操作。</p>`;
+  h+=`<h4>🔥 加码条件可能是</h4><p>${Object.values(BOOSTS).map(b=>`<b>${b.t}</b>：${b.e}`).join('<br>')}</p>`;
   $('#ruleList').innerHTML=h;
 }
 buildRuleList();
 
 /* ----------- 按钮绑定 ----------- */
 $('#btnStart').addEventListener('click',startGame);
+$('#btnResume').addEventListener('click',resumeGame);
+$('#btnRulesStart').addEventListener('click',()=>$('#rulesModal').classList.add('show'));
 $('#bUndo').addEventListener('click',undo);
-$('#bSkip').addEventListener('click',()=>{ if(S.busy===-1) nextRule(true); });
+$('#bSkip').addEventListener('click',skipRule);
 $('#bMute').addEventListener('click',()=>{S.muted=!S.muted;render();if(!S.muted)sfx.tap();
   try{const s=JSON.parse(localStorage.getItem('paipai')||'{}');s.muted=S.muted;localStorage.setItem('paipai',JSON.stringify(s));}catch(e){}});
-$('#bMenu').addEventListener('click',()=>{closeChoose();$('#menu').classList.add('show');});
+$('#bMenu').addEventListener('click',()=>{ if(S.busy!==-1) closeChoose(); resetPuck(); $('#menu').classList.add('show');});
 $('#mResume').addEventListener('click',()=>$('#menu').classList.remove('show'));
 $('#mEnd').addEventListener('click',endGame);
-$('#mHome').addEventListener('click',()=>{$('#menu').classList.remove('show');clearTimeout(S.flashTimer);show('start');});
+$('#mHome').addEventListener('click',()=>{$('#menu').classList.remove('show');clearTimeout(S.flashTimer);S.tok++;S.playing=false;S.pending=false;clearSave();show('start');});
 $('#mRules').addEventListener('click',()=>$('#rulesModal').classList.add('show'));
 $('#rClose').addEventListener('click',()=>$('#rulesModal').classList.remove('show'));
 $('#bReplay').addEventListener('click',startGame);
-$('#bHome').addEventListener('click',()=>show('start'));
+$('#bHome').addEventListener('click',()=>{show('start');refreshResume();});
+refreshResume();
 
 /* ----------- 防误触缩放/滚动 ----------- */
 ['gesturestart','gesturechange','gestureend'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
@@ -588,13 +958,14 @@ document.addEventListener('touchmove',e=>{
 },{passive:false});
 document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
 document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState!=='visible' && G.owner!==null) puckRelease({pointerId:G.owner}); });
 
 // 尽量保持屏幕常亮
 async function wake(){ try{ if('wakeLock' in navigator) await navigator.wakeLock.request('screen'); }catch(e){} }
 document.addEventListener('click',wake,{once:true});
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') wake(); });
 
-window.__paipai={S,CONDITIONS,setRule,render}; // 调试用
+window.__paipai={S,G,CONDITIONS,BOOSTS,setRule,render,layout,jokerPress,applyBoost,undo,nextRule}; // 调试用
 })();
 </script>
 </body>
